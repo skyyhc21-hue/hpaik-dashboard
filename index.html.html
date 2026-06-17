@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>해운대백병원 교원인력 Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --navy:#0f2244;--blue:#1a56db;--blue-lt:#eff4ff;--blue-mid:#bfdbfe;
+  --green:#059669;--green-lt:#ecfdf5;--amber:#d97706;--amber-lt:#fffbeb;
+  --red:#dc2626;--red-lt:#fef2f2;--purple:#7c3aed;--purple-lt:#f5f3ff;
+  --teal:#0891b2;--teal-lt:#ecfeff;
+  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+  --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR','Segoe UI',sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200}
+.hdr-logo{display:flex;align-items:center;gap:10px}
+.hdr-logo .dot{width:8px;height:8px;border-radius:50%;background:#60a5fa}
+.hdr-logo h1{font-size:14px;font-weight:600;color:#fff;letter-spacing:-.01em}
+.hdr-logo span{font-size:11px;color:#94a3b8;margin-left:6px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-date{font-size:11px;color:#94a3b8}
+select.hdr-sel{background:#1e3a5f;border:1px solid #2d5a8e;color:#e2e8f0;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer}
+
+/* ── TABS ── */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:190}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:11px 16px;font-size:12px;font-weight:500;color:var(--t3);border-bottom:2px solid transparent;cursor:pointer;background:none;border-left:none;border-right:none;border-top:none;white-space:nowrap;transition:color .15s}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+/* ── LAYOUT ── */
+.pane{display:none;padding:14px 14px 60px}
+.pane.on{display:block}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:640px){.grid4{grid-template-columns:repeat(4,1fr)}}
+
+/* ── KPI CARDS ── */
+.kpi{background:var(--card);border-radius:var(--r);padding:14px 14px 12px;border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent,var(--blue))}
+.kpi-label{font-size:11px;color:var(--t3);font-weight:500;letter-spacing:.03em;text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:26px;font-weight:700;color:var(--t1);line-height:1;letter-spacing:-.02em}
+.kpi-val span{font-size:13px;font-weight:400;color:var(--t2);margin-left:3px}
+.kpi-sub{font-size:11px;color:var(--t3);margin-top:5px}
+.kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;margin-top:5px}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin:16px 0 10px}
+.sec-title{font-size:13px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:6px}
+.sec-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px}
+.sec-note{font-size:11px;color:var(--t3)}
+
+/* ── CHART CARDS ── */
+.chart-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.chart-title{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.chart-title .unit{font-size:10px;color:var(--t3);font-weight:400}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{font-size:10px;font-weight:700;color:var(--t3);text-align:left;padding:10px 10px;border-bottom:1px solid var(--border);background:#f8fafc;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
+tbody td{padding:9px 10px;border-bottom:1px solid #f1f5f9;color:var(--t1);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f8fafc}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-size:12px}
+td.name{font-weight:600;font-size:13px}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.b-blue{background:var(--blue-lt);color:#1e40af}
+.b-green{background:var(--green-lt);color:#065f46}
+.b-amber{background:var(--amber-lt);color:#92400e}
+.b-red{background:var(--red-lt);color:#991b1b}
+.b-purple{background:var(--purple-lt);color:#5b21b6}
+.b-teal{background:var(--teal-lt);color:#164e63}
+.b-gray{background:#f1f5f9;color:#475569}
+
+/* ── PROGRESS BAR ── */
+.pbar-bg{width:100%;height:4px;background:#f1f5f9;border-radius:99px;overflow:hidden}
+.pbar{height:4px;border-radius:99px;transition:width .4s}
+
+/* ── ALERT ITEMS ── */
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.alert-item:last-child{border-bottom:none}
+.alert-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+/* ── CHANGE ITEMS ── */
+.chg-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.chg-item:last-child{border-bottom:none}
+.chg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:12px}
+.filter-row::-webkit-scrollbar{display:none}
+.fpill{flex:none;font-size:11px;font-weight:600;padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:var(--card);color:var(--t2);cursor:pointer;transition:all .15s;letter-spacing:.02em}
+.fpill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;background:var(--card);color:var(--t1);outline:none}
+.search-wrap input:focus{border-color:#93c5fd}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:14px}
+
+/* ── MEMO ── */
+textarea.memo{width:100%;min-height:180px;padding:12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;line-height:1.7;resize:vertical;background:var(--card);color:var(--t1);outline:none}
+textarea.memo:focus{border-color:#93c5fd}
+.save-btn{width:100%;margin-top:8px;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.02em}
+.save-btn:active{opacity:.9}
+
+/* ── CONTRACT TIMELINE ── */
+.dday-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.dday-num{min-width:52px;text-align:center}
+.dday-num .dn{font-size:20px;font-weight:800;line-height:1}
+.dday-num .dl{font-size:10px;color:var(--t3);font-weight:500}
+.dday-info{flex:1}
+.dday-info .dn2{font-size:13px;font-weight:700;color:var(--t1)}
+.dday-info .ds{font-size:11px;color:var(--t3);margin-top:2px}
+.dday-bar-wrap{width:80px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- PIN LOCK -->
+<div id="pinLock" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+  <div style="text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🏥</div>
+    <div style="color:#fff;font-size:17px;font-weight:600;letter-spacing:-.01em">해운대백병원</div>
+    <div style="color:#94a3b8;font-size:12px;margin-top:4px">교원인력 Intelligence</div>
+  </div>
+  <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:28px 32px;display:flex;flex-direction:column;align-items:center;gap:16px;width:280px">
+    <div style="color:#cbd5e1;font-size:13px">PIN 번호를 입력하세요</div>
+    <div id="pinDots" style="display:flex;gap:12px;margin:4px 0">
+      <div class="dot-el" style="width:14px;height:14px;border-radius:50%;border:2px solid #475569;transition:.2s"></div>
+      <div class="dot-el" style="width:14px;height:14px;border-radius:50%;border:2px solid #475569;transition:.2s"></div>
+      <div class="dot-el" style="width:14px;height:14px;border-radius:50%;border:2px solid #475569;transition:.2s"></div>
+      <div class="dot-el" style="width:14px;height:14px;border-radius:50%;border:2px solid #475569;transition:.2s"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%">
+      <button onclick="pinInput('1')" class="pin-btn">1</button>
+      <button onclick="pinInput('2')" class="pin-btn">2</button>
+      <button onclick="pinInput('3')" class="pin-btn">3</button>
+      <button onclick="pinInput('4')" class="pin-btn">4</button>
+      <button onclick="pinInput('5')" class="pin-btn">5</button>
+      <button onclick="pinInput('6')" class="pin-btn">6</button>
+      <button onclick="pinInput('7')" class="pin-btn">7</button>
+      <button onclick="pinInput('8')" class="pin-btn">8</button>
+      <button onclick="pinInput('9')" class="pin-btn">9</button>
+      <button onclick="pinClear()" class="pin-btn" style="color:#94a3b8;font-size:12px">지우기</button>
+      <button onclick="pinInput('0')" class="pin-btn">0</button>
+      <button onclick="pinInput('')" class="pin-btn" style="opacity:0" disabled></button>
+    </div>
+    <div id="pinMsg" style="color:#f87171;font-size:12px;min-height:18px"></div>
+  </div>
+</div>
+<style>
+.pin-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;font-size:18px;font-weight:500;border-radius:12px;padding:14px;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.pin-btn:active{background:rgba(255,255,255,0.2);transform:scale(.95)}
+</style>
+<script>
+const CORRECT_PIN='2104'; // ← 여기서 PIN 변경
+let pinVal='';
+function pinInput(d){
+  if(pinVal.length>=4)return;
+  pinVal+=d;
+  updateDots();
+  if(pinVal.length===4) setTimeout(checkPin,150);
+}
+function pinClear(){pinVal=pinVal.slice(0,-1);updateDots();}
+function updateDots(){
+  document.querySelectorAll('.dot-el').forEach((el,i)=>{
+    el.style.background=i<pinVal.length?'#60a5fa':'transparent';
+    el.style.borderColor=i<pinVal.length?'#60a5fa':'#475569';
+  });
+}
+function checkPin(){
+  if(pinVal===CORRECT_PIN){
+    sessionStorage.setItem('hpaikAuth','1');
+    document.getElementById('pinLock').style.display='none';
+  } else {
+    document.getElementById('pinMsg').textContent='PIN이 올바르지 않습니다';
+    document.querySelectorAll('.dot-el').forEach(el=>{el.style.borderColor='#f87171';el.style.background='#f87171'});
+    setTimeout(()=>{pinVal='';updateDots();document.getElementById('pinMsg').textContent='';},700);
+  }
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('hpaikAuth')!=='1'){
+    document.getElementById('pinLock').style.display='flex';
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('pinLock').style.display==='none')return;
+  if(e.key>='0'&&e.key<='9')pinInput(e.key);
+  if(e.key==='Backspace')pinClear();
+});
+</script>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="dot"></div>
+    <h1>해운대백병원 <span>교원인력 Intelligence</span></h1>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-date" id="hdr-date"></span>
+    <select class="hdr-sel" onchange="setMonth(this.value)">
+      <option value="2604">2026. 04</option>
+      <option value="2603">2026. 03</option>
+    </select>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabs">
+  <button class="tab on" onclick="sw(0,this)">📊 개요</button>
+  <button class="tab" onclick="sw(1,this)">📋 실적조회</button>
+  <button class="tab" onclick="sw(2,this)">📅 재계약관리</button>
+  <button class="tab" onclick="sw(3,this)">🔔 인사변동</button>
+  <button class="tab" onclick="sw(4,this)">✏️ 메모</button>
+</nav>
+
+<!-- ═══════════════════════════════════ TAB 0: 개요 ═══ -->
+<div id="p0" class="pane on">
+
+  <div class="grid4">
+    <div class="kpi" style="--accent:#1a56db">
+      <div class="kpi-label">관리대상 교원</div>
+      <div class="kpi-val">240<span>명</span></div>
+      <div class="kpi-sub">총 279명 중 의생명연구원 제외</div>
+    </div>
+    <div class="kpi" style="--accent:#7c3aed">
+      <div class="kpi-label">비전임교원 (H0)</div>
+      <div class="kpi-val">98<span>명</span></div>
+      <div class="kpi-sub">임상강사 6 · 진료교수 86 · 계약제 6+</div>
+    </div>
+    <div class="kpi" style="--accent:#059669">
+      <div class="kpi-label">비전임 총진료금액</div>
+      <div class="kpi-val">440<span>억+</span></div>
+      <div class="kpi-sub">2026년 4월 기준 (PAIK-MA-013)</div>
+    </div>
+    <div class="kpi" style="--accent:#dc2626">
+      <div class="kpi-label">재계약 만료임박</div>
+      <div class="kpi-val" id="kpi-exp" style="color:#dc2626">-<span>명</span></div>
+      <div class="kpi-sub">90일 이내 만료 예정</div>
+    </div>
+  </div>
+
+  <!-- 연구년 알림 -->
+  <div style="background:#eff4ff;border:1px solid #bfdbfe;border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;display:flex;gap:8px;align-items:flex-start">
+    <span style="font-size:14px">ℹ️</span>
+    <div><strong>연구년 6명 실적 제외 확인:</strong> 배동식·이상진·이지숙·김주연·송새암·이수정 &nbsp;|&nbsp; 육아휴직: 김시은(신경과 부교수) ~2026-09-01</div>
+  </div>
+
+  <!-- 교원 구성 도넛 + 비전임 실적 TOP -->
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-title">교원 구성 비율 <span class="unit">2026.06 기준</span></div>
+      <div id="comp-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+      <div style="position:relative;height:180px"><canvas id="compChart" role="img" aria-label="교원 구성 비율 도넛 차트">교수 75명, 부교수 37명, 조교수 25명, 진료교수 86명, 임상강사 6명, 계약제 6명</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">비전임 총진료금액 TOP 8 <span class="unit">만원</span></div>
+      <div style="position:relative;height:220px"><canvas id="topChart" role="img" aria-label="비전임교원 총진료금액 상위 8명 막대 차트">왕희정 128,434만원 최고</canvas></div>
+    </div>
+  </div>
+
+  <!-- 진료유형별 비교 -->
+  <div class="chart-card">
+    <div class="chart-title">비전임 교수 진료유형별 실적 비교 (외래 vs 입원) <span class="unit">환자수</span></div>
+    <div id="type-legend" style="display:flex;gap:14px;margin-bottom:10px;font-size:11px;color:var(--t2)"></div>
+    <div style="position:relative;height:220px"><canvas id="typeChart" role="img" aria-label="진료유형별 외래 입원 환자수 비교 막대 차트">외래 입원 환자수 비교</canvas></div>
+  </div>
+
+  <!-- 연구년 현황 요약 -->
+  <div class="sec-hdr"><div class="sec-title">재계약 만료 현황 요약</div><div class="sec-note">90일 이내</div></div>
+  <div id="contract-summary"></div>
+
+</div>
+
+<!-- ═══════════════════════════════════ TAB 1: 실적조회 ═══ -->
+<div id="p1" class="pane">
+
+  <div class="filter-row">
+    <button class="fpill on" onclick="fp('all',this)">전 체</button>
+    <button class="fpill" onclick="fp('전임',this)">전임교원</button>
+    <button class="fpill" onclick="fp('진료교수',this)">진료교수</button>
+    <button class="fpill" onclick="fp('임상강사',this)">임상강사</button>
+    <button class="fpill" onclick="fp('계약제',this)">계약제</button>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="srch" placeholder="의사명 · 진료과 · 직위 검색…" oninput="renderTable()">
+  </div>
+
+  <!-- 실적 차트 (필터 연동) -->
+  <div class="chart-card" id="perf-chart-wrap">
+    <div class="chart-title" id="perf-chart-title">실적 순위 (총진료금액 기준) <span class="unit">만원</span></div>
+    <div style="position:relative;height:260px"><canvas id="perfChart" role="img" aria-label="실적 순위 가로 막대 차트">총진료금액 기준 순위</canvas></div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>순위</th><th>성명</th><th>진료과</th><th>직위</th>
+          <th class="num">외래 환자</th><th class="num">입원 환자</th>
+          <th class="num">검진 건수</th><th class="num">총진료금액(만원)</th>
+          <th>구분</th><th>검토기준</th><th>비율</th>
+        </tr>
+      </thead>
+      <tbody id="perf-body"></tbody>
+    </table>
+  </div>
+  <p style="font-size:11px;color:var(--t3);margin-top:8px;padding:0 2px">※ 사번 H0 기준 · 의생명연구원·일반의·지원교원 제외 · 2026년 4월 실적</p>
+
+</div>
+
+<!-- ═══════════════════════════════════ TAB 2: 재계약관리 ═══ -->
+<div id="p2" class="pane">
+
+  <div class="grid4" style="margin-bottom:14px">
+    <div class="kpi" style="--accent:#dc2626">
+      <div class="kpi-label">30일 내 만료</div>
+      <div class="kpi-val" id="c30" style="color:#dc2626">-<span>명</span></div>
+      <div class="kpi-sub">즉시 면담 필요</div>
+    </div>
+    <div class="kpi" style="--accent:#d97706">
+      <div class="kpi-label">90일 내 만료</div>
+      <div class="kpi-val" id="c90" style="color:#d97706">-<span>명</span></div>
+      <div class="kpi-sub">재계약 검토 진행</div>
+    </div>
+    <div class="kpi" style="--accent:#059669">
+      <div class="kpi-label">6개월 내 만료</div>
+      <div class="kpi-val" id="c180" style="color:#059669">-<span>명</span></div>
+      <div class="kpi-sub">사전 검토 권장</div>
+    </div>
+    <div class="kpi" style="--accent:#0891b2">
+      <div class="kpi-label">재계약 안정</div>
+      <div class="kpi-val" id="cok" style="color:#0891b2">-<span>명</span></div>
+      <div class="kpi-sub">6개월 초과</div>
+    </div>
+  </div>
+
+  <!-- 재계약 타임라인 차트 -->
+  <div class="chart-card">
+    <div class="chart-title">계약 만료 타임라인 <span class="unit">D-day 순</span></div>
+    <div style="position:relative;height:220px"><canvas id="ddayChart" role="img" aria-label="재계약 만료 D-day 막대 차트">계약 만료까지 남은 일수</canvas></div>
+  </div>
+
+  <div style="background:#fef9ec;border:1px solid #fde68a;border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400e">
+    📌 <strong>구도훈 교수</strong> — 재계약 검토 진행 중 (타당성 분석·급여 설계안 v4 완료)
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">계약 만료 상세 (만료일 순)</div></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>성명</th><th>진료과</th><th>직급</th><th>계약종료일</th><th>D-day</th><th>상태</th></tr></thead>
+      <tbody id="ct-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ TAB 3: 인사변동 ═══ -->
+<div id="p3" class="pane">
+
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065f46">
+    📅 <strong>2026년 6월 교원 인사변동현황</strong> — 기준일 2026-06-11
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">입사 (3명)</div></div>
+  <div class="chart-card" style="padding:12px">
+    <div class="chg-item"><div class="chg-dot" style="background:#059669"></div><div><strong>김재훈</strong> &nbsp;<span style="color:var(--t3)">소화기내과 · 임상강사 · H00809</span><br><span style="font-size:11px;color:var(--t3)">2026-06-01 입사</span></div><span class="badge b-green" style="margin-left:auto">입사</span></div>
+    <div class="chg-item"><div class="chg-dot" style="background:#059669"></div><div><strong>유가인</strong> &nbsp;<span style="color:var(--t3)">심장내과 · 진료교수 · H00827</span><br><span style="font-size:11px;color:var(--t3)">2026-06-01 입사</span></div><span class="badge b-green" style="margin-left:auto">입사</span></div>
+    <div class="chg-item"><div class="chg-dot" style="background:#059669"></div><div><strong>손창우</strong> &nbsp;<span style="color:var(--t3)">종합검진센터 · 계약제전문의 · H00828</span><br><span style="font-size:11px;color:var(--t3)">2026-06-01 입사</span></div><span class="badge b-green" style="margin-left:auto">입사</span></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">퇴사 (1명)</div></div>
+  <div class="chart-card" style="padding:12px">
+    <div class="chg-item"><div class="chg-dot" style="background:#dc2626"></div><div><strong>조일형</strong> &nbsp;<span style="color:var(--t3)">의생명연구원 · 일반의 · H00779</span><br><span style="font-size:11px;color:var(--t3)">2026-06-09 퇴사 (추가)</span></div><span class="badge b-red" style="margin-left:auto">퇴사</span></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">휴가/휴직</div></div>
+  <div class="chart-card" style="padding:12px">
+    <div class="chg-item"><div class="chg-dot" style="background:#7c3aed"></div><div><strong>김시은</strong> &nbsp;<span style="color:var(--t3)">신경과 · 부교수 · H00444</span><br><span style="font-size:11px;color:var(--t3)">육아휴직 2026-06-01 ~ 2026-09-01</span></div><span class="badge b-purple" style="margin-left:auto">육아휴직</span></div>
+    <div class="chg-item"><div class="chg-dot" style="background:#64748b"></div><div><strong>홍진교</strong> &nbsp;<span style="color:var(--t3)">직업환경의학과 · 진료교수 · H00740</span><br><span style="font-size:11px;color:var(--t3)">기타휴가 복귀 (2026-05-01~05-31)</span></div><span class="badge b-gray" style="margin-left:auto">복귀</span></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">연구년 현황 (6명)</div></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>성명</th><th>소속</th><th>직위</th><th>기간</th><th>지역</th><th>종료까지</th></tr></thead>
+      <tbody id="research-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ TAB 4: 메모 ═══ -->
+<div id="p4" class="pane">
+
+  <div class="sec-hdr"><div class="sec-title">업무 메모 / 면담 이력</div></div>
+  <textarea class="memo" id="memo" placeholder="면담 내용, 재계약 검토 사항, 정책 메모, 특이사항…"></textarea>
+  <button class="save-btn" onclick="saveMemo()">저장 (기기 로컬 저장)</button>
+
+  <div class="sec-hdr" style="margin-top:18px"><div class="sec-title">주요 현안</div></div>
+  <div class="chart-card" style="padding:12px">
+    <div class="chg-item"><span class="badge b-amber">검토중</span><div style="margin-left:6px"><strong>구도훈 교수</strong> 재계약 급여 설계안 v4 완료 · 타당성 분석 보고서 작성됨</div></div>
+    <div class="chg-item"><span class="badge b-amber">검토중</span><div style="margin-left:6px"><strong>안과 임상강사 증원</strong> 타당성 분석 (2026-06-04)</div></div>
+    <div class="chg-item"><span class="badge b-blue">참고</span><div style="margin-left:6px">상급종합병원 구조전환 지원사업 지침 개정 (26년 2월)</div></div>
+    <div class="chg-item"><span class="badge b-blue">참고</span><div style="margin-left:6px">지역필수의사제 시범사업 공모 안내 접수</div></div>
+    <div class="chg-item"><span class="badge b-gray">완료</span><div style="margin-left:6px">의사직 인센티브 구조 설계 보고서 작성 (260611)</div></div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────
+const PERF = [
+  // 임상강사 (H0) — 실적검토 제외
+  {name:'나정호',dept:'안과',pos:'임상강사',type:'임상강사',out:4459,inp:3690,chk:0,rev:5847,criteria:'제외'},
+  {name:'박준오',dept:'심장내과',pos:'임상강사',type:'임상강사',out:24,inp:1754,chk:0,rev:1493,criteria:'제외'},
+  {name:'김수형',dept:'소화기내과',pos:'임상강사',type:'임상강사',out:414,inp:0,chk:0,rev:423,criteria:'제외'},
+  {name:'오병욱',dept:'호흡기내과',pos:'임상강사',type:'임상강사',out:52,inp:0,chk:0,rev:38,criteria:'제외'},
+  {name:'이학수',dept:'신경외과',pos:'임상강사',type:'임상강사',out:1,inp:0,chk:0,rev:0,criteria:'제외'},
+  // 진료교수 (H0) — 발생수익 기준
+  {name:'왕희정',dept:'외과',pos:'진료교수',type:'진료교수',out:19223,inp:922867,chk:0,rev:128434,criteria:'수익'},
+  {name:'박강윤',dept:'안과',pos:'진료교수',type:'진료교수',out:27649,inp:17213,chk:0,rev:42058,criteria:'수익'},
+  {name:'구도훈',dept:'외과',pos:'진료교수',type:'진료교수',out:20444,inp:57775,chk:0,rev:49272,criteria:'수익'},
+  {name:'주상욱',dept:'신경외과',pos:'진료교수',type:'진료교수',out:6538,inp:319876,chk:0,rev:36832,criteria:'수익'},
+  {name:'장우익',dept:'심장혈관흉부외과',pos:'진료교수',type:'진료교수',out:1403,inp:268323,chk:0,rev:32931,criteria:'수익'},
+  {name:'김성제',dept:'소화기내과',pos:'진료교수',type:'진료교수',out:6384,inp:182889,chk:0,rev:24861,criteria:'수익'},
+  {name:'조윤성',dept:'심장내과',pos:'진료교수',type:'진료교수',out:6869,inp:183058,chk:0,rev:20826,criteria:'수익'},
+  {name:'송윤석',dept:'심장내과',pos:'진료교수',type:'진료교수',out:7412,inp:49530,chk:0,rev:20040,criteria:'수익'},
+  {name:'이준원',dept:'신경과',pos:'진료교수',type:'진료교수',out:8406,inp:90371,chk:0,rev:19196,criteria:'수익'},
+  {name:'박선양',dept:'혈액종양내과',pos:'진료교수',type:'진료교수',out:16798,inp:0,chk:0,rev:14538,criteria:'수익'},
+  {name:'최민성',dept:'산부인과',pos:'진료교수',type:'진료교수',out:5825,inp:27614,chk:0,rev:16708,criteria:'수익'},
+  {name:'임소현',dept:'신경과',pos:'진료교수',type:'진료교수',out:4790,inp:5063,chk:0,rev:16571,criteria:'수익'},
+  {name:'홍채민',dept:'안과',pos:'진료교수',type:'진료교수',out:7717,inp:5489,chk:0,rev:11628,criteria:'수익'},
+  {name:'구형준',dept:'정형외과',pos:'진료교수',type:'진료교수',out:1784,inp:23939,chk:0,rev:13573,criteria:'수익'},
+  {name:'황지연',dept:'내분비대사내과',pos:'진료교수',type:'진료교수',out:12091,inp:570,chk:0,rev:4855,criteria:'수익'},
+  {name:'선욱',dept:'성형외과',pos:'진료교수',type:'진료교수',out:3857,inp:10716,chk:0,rev:7479,criteria:'수익'},
+  {name:'윤병우',dept:'이비인후과',pos:'진료교수',type:'진료교수',out:2766,inp:7390,chk:0,rev:4975,criteria:'수익'},
+  {name:'박세흠',dept:'재활의학과',pos:'진료교수',type:'진료교수',out:2100,inp:6199,chk:0,rev:4584,criteria:'수익'},
+  {name:'박순재',dept:'외과',pos:'진료교수',type:'진료교수',out:533,inp:10660,chk:0,rev:4792,criteria:'수익'},
+  {name:'박병화',dept:'신장내과',pos:'진료교수',type:'진료교수',out:2024,inp:15885,chk:0,rev:2037,criteria:'수익'},
+  {name:'배상균',dept:'핵의학과',pos:'진료교수',type:'진료교수',out:628,inp:71,chk:0,rev:948,criteria:'수익'},
+  {name:'왕한영',dept:'피부과',pos:'진료교수',type:'진료교수',out:1874,inp:0,chk:0,rev:737,criteria:'수익'},
+  // 진료교수 — 특수기준
+  {name:'최은준',dept:'호흡기내과',pos:'진료교수',type:'진료교수',out:2893,inp:166182,chk:0,rev:7158,criteria:'외래+MICU전담'},
+  // 진료교수 — 실적검토 제외
+  {name:'선우유은',dept:'직업환경의학과',pos:'진료교수',type:'진료교수',out:17,inp:0,chk:0,rev:71,criteria:'제외'},
+  {name:'신원춘',dept:'입원의학센터',pos:'진료교수',type:'진료교수',out:41,inp:0,chk:0,rev:42,criteria:'제외'},
+  // 계약제전문의 (H0) — 종합검진센터 파트단위 실적
+  {name:'정다은',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:515,rev:28924,criteria:'제외'},
+  {name:'주희린',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:175,rev:10395,criteria:'파트단위(내시경)'},
+  {name:'인현신',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:0,rev:0,criteria:'파트단위(영상/초음파)'},
+  {name:'한유진',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:0,rev:0,criteria:'파트단위(내시경)'},
+  {name:'김건희',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:0,rev:0,criteria:'파트단위(내시경)'},
+  // 전임교원 대표 (H0)
+  {name:'김일환',dept:'혈액종양내과',pos:'교수',type:'전임',out:67612,inp:1392776,chk:0,rev:244046},
+  {name:'임성남',dept:'혈액종양내과',pos:'부교수',type:'전임',out:44333,inp:1039888,chk:0,rev:177789},
+  {name:'강명주',dept:'혈액종양내과',pos:'교수',type:'전임',out:58987,inp:694687,chk:0,rev:134098},
+  {name:'지용일',dept:'산부인과',pos:'교수',type:'전임',out:26881,inp:118285,chk:0,rev:109314},
+  {name:'진성철',dept:'신경외과',pos:'교수',type:'전임',out:14865,inp:394669,chk:0,rev:100018},
+  {name:'이용준',dept:'혈액종양내과',pos:'조교수',type:'전임',out:23448,inp:286070,chk:0,rev:82177},
+  {name:'김양욱',dept:'신장내과',pos:'교수',type:'전임',out:46206,inp:370339,chk:0,rev:75116},
+  {name:'박봉수',dept:'신장내과',pos:'교수',type:'전임',out:23796,inp:447963,chk:0,rev:61711},
+  {name:'허창민',dept:'신장내과',pos:'조교수',type:'전임',out:13656,inp:758904,chk:0,rev:60055},
+  {name:'조선미',dept:'방사선종양학과',pos:'부교수',type:'전임',out:5001,inp:0,chk:0,rev:52098},
+  {name:'최준혁',dept:'소화기내과',pos:'부교수',type:'전임',out:13592,inp:195121,chk:0,rev:32561},
+  {name:'박승하',dept:'소화기내과',pos:'교수',type:'전임',out:15776,inp:270338,chk:0,rev:20589},
+  {name:'김태오',dept:'소화기내과',pos:'교수',type:'전임',out:21062,inp:16446,chk:0,rev:30853},
+  {name:'김성호',dept:'류마티스내과',pos:'교수',type:'전임',out:23751,inp:0,chk:0,rev:17387},
+  {name:'이성근',dept:'류마티스내과',pos:'교수',type:'전임',out:12901,inp:768,chk:0,rev:13770},
+];
+
+const CONTRACTS = [
+  // ★ 단기 만료 (2026-07-31)
+  {name:'구도훈',dept:'외과',pos:'진료교수',end:'2026-07-31'},
+  // 2027-02-28 만료 (26학년도 1년 계약)
+  {name:'정윤진',dept:'소화기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'남화성',dept:'소화기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'서은희',dept:'소화기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'정희정',dept:'소화기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'김성제',dept:'소화기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'송윤석',dept:'심장내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'유정남',dept:'심장내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'최은준',dept:'호흡기내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'황지연',dept:'내분비대사내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박병화',dept:'신장내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박선양',dept:'혈액종양내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'왕성배',dept:'내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박다원',dept:'내과',pos:'진료교수',end:'2027-02-28'},
+  {name:'이준원',dept:'신경과',pos:'진료교수',end:'2027-02-28'},
+  {name:'임소현',dept:'신경과',pos:'진료교수',end:'2027-02-28'},
+  {name:'왕한영',dept:'피부과',pos:'진료교수',end:'2027-02-28'},
+  {name:'신동우',dept:'외과',pos:'진료교수',end:'2027-02-28'},
+  {name:'장상태',dept:'외과',pos:'진료교수',end:'2027-02-28'},
+  {name:'장우익',dept:'심장혈관흉부외과',pos:'진료교수',end:'2027-02-28'},
+  {name:'선욱',dept:'성형외과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박강윤',dept:'안과',pos:'진료교수',end:'2027-02-28'},
+  {name:'서태경',dept:'이비인후과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박세흠',dept:'재활의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'김재환',dept:'마취통증의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'박희빈',dept:'마취통증의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'백승훈',dept:'마취통증의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'신민우',dept:'영상의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'이준형',dept:'영상의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'배상균',dept:'핵의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'홍진교',dept:'직업환경의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'장채령',dept:'직업환경의학과',pos:'진료교수',end:'2027-02-28'},
+  {name:'임장섭',dept:'치과',pos:'진료교수',end:'2027-02-28'},
+  {name:'한상정',dept:'치과',pos:'진료교수',end:'2027-02-28'},
+  {name:'김정민',dept:'치과',pos:'진료교수',end:'2027-02-28'},
+  {name:'신원춘',dept:'입원의학센터',pos:'진료교수',end:'2027-02-28'},
+  {name:'이윤미',dept:'중환자의학센터',pos:'진료교수',end:'2027-02-28'},
+  {name:'주희린',dept:'종합검진센터',pos:'계약제전문의',end:'2027-02-28'},
+  {name:'인현신',dept:'종합검진센터',pos:'계약제전문의',end:'2027-02-28'},
+  {name:'정다은',dept:'종합검진센터',pos:'계약제전문의',end:'2027-02-28'},
+  {name:'김건희',dept:'종합검진센터',pos:'진료교수',end:'2027-02-28'},
+  {name:'손창우',dept:'종합검진센터',pos:'계약제전문의',end:'2027-02-28'},
+  // 임상강사 (26학년도)
+  {name:'나정호',dept:'안과',pos:'임상강사',end:'2027-02-28'},
+  {name:'박준오',dept:'심장내과',pos:'임상강사',end:'2027-02-28'},
+  {name:'김수형',dept:'소화기내과',pos:'임상강사',end:'2027-02-28'},
+  {name:'오병욱',dept:'호흡기내과',pos:'임상강사',end:'2027-02-28'},
+  {name:'이학수',dept:'신경외과',pos:'임상강사',end:'2027-02-28'},
+  // 2027-04-30 만료
+  {name:'한일용',dept:'심장혈관흉부외과',pos:'진료교수',end:'2027-04-30'},
+  // 2027-08-31 만료
+  {name:'유가인',dept:'심장내과',pos:'진료교수',end:'2027-08-31'},
+  // 2028-02-29 만료 (26학년도 2년 계약)
+  {name:'김은영',dept:'소화기내과',pos:'진료교수',end:'2028-02-29'},
+  {name:'강혜림',dept:'소화기내과',pos:'진료교수',end:'2028-02-29'},
+  {name:'조윤성',dept:'심장내과',pos:'진료교수',end:'2028-02-29'},
+  {name:'김태형',dept:'내과',pos:'진료교수',end:'2028-02-29'},
+  {name:'왕희정',dept:'외과',pos:'진료교수',end:'2028-02-29'},
+  {name:'박순재',dept:'외과',pos:'진료교수',end:'2028-02-29'},
+  {name:'구형준',dept:'정형외과',pos:'진료교수',end:'2028-02-29'},
+  {name:'주상욱',dept:'신경외과',pos:'진료교수',end:'2028-02-29'},
+  {name:'최민성',dept:'산부인과',pos:'진료교수',end:'2028-02-29'},
+  {name:'홍채민',dept:'안과',pos:'진료교수',end:'2028-02-29'},
+  {name:'윤병우',dept:'이비인후과',pos:'진료교수',end:'2028-02-29'},
+  {name:'김효중',dept:'마취통증의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'조인영',dept:'영상의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'김진혁',dept:'영상의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'주진우',dept:'병리과',pos:'진료교수',end:'2028-02-29'},
+  {name:'정민정',dept:'병리과',pos:'진료교수',end:'2028-02-29'},
+  {name:'박건우',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'김한별',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'이현욱',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'박현우',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'배상훈',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'유재광',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'류현진',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'임채영',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'문병건',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'손동근',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'김정민',dept:'응급의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'선우유은',dept:'직업환경의학과',pos:'진료교수',end:'2028-02-29'},
+  {name:'박미선',dept:'치과',pos:'진료교수',end:'2028-02-29'},
+  {name:'최성현',dept:'치과',pos:'진료교수',end:'2028-02-29'},
+  {name:'한유진',dept:'종합검진센터',pos:'진료교수',end:'2028-02-29'},
+  {name:'홍성용',dept:'중환자의학센터',pos:'진료교수',end:'2028-02-29'},
+  {name:'김상훈',dept:'중환자의학센터',pos:'진료교수',end:'2028-02-29'},
+];
+
+const RESEARCH = [
+  {name:'배동식',dept:'외과',pos:'교수',start:'2025-08-01',end:'2026-07-31',area:'미국'},
+  {name:'이상진',dept:'정형외과',pos:'부교수',start:'2025-08-01',end:'2026-07-31',area:'미국'},
+  {name:'이지숙',dept:'영상의학과',pos:'부교수',start:'2025-08-01',end:'2026-07-31',area:'미국'},
+  {name:'김주연',dept:'병리과',pos:'부교수',start:'2025-08-04',end:'2026-08-03',area:'국내'},
+  {name:'송새암',dept:'진단검사의학과',pos:'부교수',start:'2025-09-01',end:'2026-08-31',area:'미국'},
+  {name:'이수정',dept:'안과',pos:'교수',start:'2026-04-22',end:'2027-04-21',area:'국내(양부대)'},
+];
+
+// ── CHARTS ──────────────────────────────────────────────────────
+const TYPE_ORDER = {'전임':0,'진료교수':1,'임상강사':2,'계약제':3};
+const TYPE_CLR = {
+  '전임':'#1a56db','진료교수':'#7c3aed','임상강사':'#0891b2','계약제':'#059669'
+};
+const TYPE_LABEL = {
+  '전임':'전임교원','진료교수':'진료교수','임상강사':'임상강사','계약제':'계약제'
+};
+
+let perfChartInst = null, ddayChartInst = null;
+
+function initCompChart(){
+  const data = [75,37,25,86,6,6];
+  const labels = ['교수','부교수','조교수','진료교수','임상강사','계약제전문의'];
+  const colors = ['#1a56db','#3b82f6','#93c5fd','#7c3aed','#0891b2','#059669'];
+  new Chart(document.getElementById('compChart'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label} ${c.parsed}명 (${Math.round(c.parsed/235*100)}%)`}}}}
+  });
+  const leg = document.getElementById('comp-legend');
+  labels.forEach((l,i)=>{
+    leg.innerHTML+=`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#475569"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i]};display:inline-block;flex-shrink:0"></span>${l} ${data[i]}</span>`;
+  });
+}
+
+function initTopChart(){
+  const top8 = [...PERF].filter(d=>d.type==='진료교수'||d.type==='임상강사').sort((a,b)=>b.rev-a.rev).slice(0,8);
+  new Chart(document.getElementById('topChart'),{
+    type:'bar',
+    data:{
+      labels:top8.map(d=>d.name),
+      datasets:[{label:'총진료금액(만원)',data:top8.map(d=>d.rev),
+        backgroundColor:top8.map(d=>TYPE_CLR[d.type]||'#1a56db'),
+        borderRadius:4,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.toLocaleString()}만원`}}},
+      scales:{x:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>v>=10000?Math.round(v/10000)+'억':v.toLocaleString()}},
+              y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+}
+
+function initTypeChart(){
+  const targets = [...PERF].filter(d=>d.type==='진료교수'&&d.rev>5000).sort((a,b)=>b.rev-a.rev).slice(0,8);
+  const leg = document.getElementById('type-legend');
+  leg.innerHTML='<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1a56db;display:inline-block"></span>외래 환자수</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#7c3aed;display:inline-block"></span>입원 환자수(÷10)</span>';
+  new Chart(document.getElementById('typeChart'),{
+    type:'bar',
+    data:{
+      labels:targets.map(d=>d.name),
+      datasets:[
+        {label:'외래 환자수',data:targets.map(d=>d.out),backgroundColor:'#1a56db',borderRadius:3,borderSkipped:false},
+        {label:'입원 환자수(÷10)',data:targets.map(d=>Math.round(d.inp/10)),backgroundColor:'#a78bfa',borderRadius:3,borderSkipped:false},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.datasetIndex===1?` 입원 ${(c.parsed.y*10).toLocaleString()}명(÷10표시)`:` 외래 ${c.parsed.y.toLocaleString()}명`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11}}},
+              y:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>v.toLocaleString()}}}}
+  });
+}
+
+function initDdayChart(){
+  const today = new Date();
+  const sorted = [...CONTRACTS].sort((a,b)=>new Date(a.end)-new Date(b.end)).slice(0,12);
+  const diffs = sorted.map(d=>Math.ceil((new Date(d.end)-today)/86400000));
+  const colors = diffs.map(d=>d<=30?'#dc2626':d<=90?'#d97706':d<=180?'#059669':'#0891b2');
+  if(ddayChartInst) ddayChartInst.destroy();
+  ddayChartInst = new Chart(document.getElementById('ddayChart'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(d=>d.name),
+      datasets:[{label:'D-day',data:diffs,backgroundColor:colors,borderRadius:4,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const d=sorted[c.dataIndex];return ` ${d.end} (D-${Math.max(0,c.parsed.x)})`;},title:c=>[c[0].label,sorted[c[0].dataIndex].dept]}}},
+      scales:{x:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>`D-${v}`},title:{display:true,text:'만료까지 남은 일수',font:{size:10}}},
+              y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+}
+
+// ── RENDER TABLE ────────────────────────────────────────────────
+let curFilter = 'all';
+function fp(f,el){
+  curFilter=f;
+  document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderTable();
+  renderPerfChart();
+}
+
+const CRITERIA_CFG = {
+  '수익':      {label:'수익기준',   cls:'b-green',  tip:'발생수익으로 실적 검토'},
+  '외래+MICU전담':{label:'외래+MICU',cls:'b-blue',   tip:'외래 2세션 + MICU 전담전문의'},
+  '외래+내시경+수익':{label:'외래+내시경',cls:'b-blue',tip:'외래+내시경 환자수 및 수익 검토'},
+  '외래+심장초음파':{label:'외래+초음파',cls:'b-blue',tip:'외래 2세션 + 심장초음파 건수'},
+  '파트단위(내시경)':{label:'내시경(파트)',cls:'b-amb', tip:'내시경 건수 — 개인별 아닌 파트단위 실적'},
+  '파트단위(영상/초음파)':{label:'영상(파트)',cls:'b-amb',tip:'영상판독/초음파 건수 — 파트단위 실적'},
+  '제외':      {label:'검토제외',   cls:'b-gray',   tip:'실적검토 대상 제외'},
+};
+function criteriaTag(c){
+  const cfg = CRITERIA_CFG[c]||{label:c,cls:'b-gray',tip:''};
+  return `<span class="badge ${cfg.cls}" title="${cfg.tip}" style="font-size:10px">${cfg.label}</span>`;
+}
+
+function renderTable(){
+  const q = document.getElementById('srch').value.toLowerCase();
+  const typeOrder = TYPE_ORDER;
+  const rows = PERF.filter(d=>{
+    const mf = curFilter==='all'||d.type===curFilter;
+    const mq = !q||d.name.includes(q)||d.dept.toLowerCase().includes(q)||d.pos.includes(q);
+    return mf&&mq;
+  }).sort((a,b)=>{
+    // 제외는 맨 뒤로
+    if(a.criteria==='제외'&&b.criteria!=='제외') return 1;
+    if(b.criteria==='제외'&&a.criteria!=='제외') return -1;
+    const td = (typeOrder[a.type]??9)-(typeOrder[b.type]??9);
+    return td!==0?td:b.rev-a.rev;
+  });
+  const maxRev = Math.max(...rows.filter(d=>d.criteria!=='제외').map(d=>d.rev),1);
+  const clrMap = {'전임':'#1a56db','진료교수':'#7c3aed','임상강사':'#0891b2','계약제':'#059669'};
+  const lblMap = {'전임':'전임','진료교수':'진료교수','임상강사':'임상강사','계약제':'계약제'};
+  const bClsMap = {'전임':'b-blue','진료교수':'b-purple','임상강사':'b-teal','계약제':'b-green'};
+  let rank = 0;
+  document.getElementById('perf-body').innerHTML = rows.map(d=>{
+    const isExcl = d.criteria==='제외';
+    if(!isExcl) rank++;
+    const rowStyle = isExcl ? 'opacity:.45;background:#f8fafc' : '';
+    return `
+    <tr style="${rowStyle}">
+      <td style="color:var(--t3);font-weight:700;width:30px">${isExcl?'—':rank}</td>
+      <td class="name">${d.name}</td>
+      <td style="font-size:11px;color:var(--t2)">${d.dept}</td>
+      <td style="font-size:11px;color:var(--t2)">${d.pos}</td>
+      <td class="num">${d.out>0?d.out.toLocaleString():'-'}</td>
+      <td class="num">${d.inp>0?d.inp.toLocaleString():'-'}</td>
+      <td class="num">${d.chk>0?d.chk.toLocaleString():'-'}</td>
+      <td class="num"><strong>${d.rev>0?d.rev.toLocaleString():'-'}</strong></td>
+      <td><span class="badge ${bClsMap[d.type]||'b-gray'}">${lblMap[d.type]||d.type}</span></td>
+      <td>${criteriaTag(d.criteria||'수익')}</td>
+      <td style="min-width:60px">${isExcl?'':` <div class="pbar-bg"><div class="pbar" style="width:${Math.round(d.rev/maxRev*100)}%;background:${clrMap[d.type]||'#94a3b8'}"></div></div>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPerfChart(){
+  const q = document.getElementById('srch').value.toLowerCase();
+  const rows = PERF.filter(d=>{
+    const mf = curFilter==='all'||d.type===curFilter;
+    const mq = !q||d.name.includes(q)||d.dept.toLowerCase().includes(q);
+    return mf&&mq&&d.rev>0&&d.criteria!=='제외';
+  }).sort((a,b)=>b.rev-a.rev).slice(0,10);
+
+  document.getElementById('perf-chart-title').innerHTML = `실적 순위 TOP ${rows.length} <span class="unit">총진료금액 · 만원</span>`;
+  if(perfChartInst) perfChartInst.destroy();
+  const canvas = document.getElementById('perfChart');
+  perfChartInst = new Chart(canvas,{
+    type:'bar',
+    data:{
+      labels:rows.map(d=>d.name),
+      datasets:[{
+        label:'총진료금액(만원)',
+        data:rows.map(d=>d.rev),
+        backgroundColor:rows.map(d=>TYPE_CLR[d.type]||'#94a3b8'),
+        borderRadius:5,borderSkipped:false
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:c=>` ${c.parsed.x.toLocaleString()}만원`,
+        title:c=>[rows[c[0].dataIndex].name,rows[c[0].dataIndex].dept]
+      }}},
+      scales:{x:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>v>=10000?Math.round(v/10000)+'억':v.toLocaleString()}},
+              y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+}
+
+// ── CONTRACT TABLE ───────────────────────────────────────────────
+function renderContract(){
+  const today = new Date();
+  let c30=0,c90=0,c180=0,cok=0;
+  const sorted = [...CONTRACTS].sort((a,b)=>new Date(a.end)-new Date(b.end));
+  document.getElementById('ct-body').innerHTML = sorted.map(d=>{
+    const diff = Math.ceil((new Date(d.end)-today)/86400000);
+    if(diff<=30) c30++;
+    else if(diff<=90) c90++;
+    else if(diff<=180) c180++;
+    else cok++;
+    let cls,txt,bg;
+    if(diff<=0){cls='b-red';txt='만료';bg='#fef2f2'}
+    else if(diff<=30){cls='b-red';txt=`D-${diff}`;bg='#fef2f2'}
+    else if(diff<=90){cls='b-amber';txt=`D-${diff}`;bg:'#fffbeb'}
+    else if(diff<=180){cls='b-green';txt=`D-${diff}`;bg:'#ecfdf5'}
+    else{cls='b-blue';txt=`D-${diff}`;bg='#fff'}
+    return `<tr style="background:${bg||'#fff'}">
+      <td class="name">${d.name}</td>
+      <td style="font-size:11px">${d.dept}</td>
+      <td style="font-size:11px">${d.pos}</td>
+      <td style="font-size:11px;white-space:nowrap">${d.end}</td>
+      <td><span class="badge ${cls}">${txt}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('c30').innerHTML=`${c30}<span>명</span>`;
+  document.getElementById('c90').innerHTML=`${c90}<span>명</span>`;
+  document.getElementById('c180').innerHTML=`${c180}<span>명</span>`;
+  document.getElementById('cok').innerHTML=`${cok}<span>명</span>`;
+  document.getElementById('kpi-exp').innerHTML=`${c30+c90}<span>명</span>`;
+
+  // 개요탭 summary
+  const imm = sorted.filter(d=>Math.ceil((new Date(d.end)-today)/86400000)<=90);
+  document.getElementById('contract-summary').innerHTML = imm.map(d=>{
+    const diff=Math.ceil((new Date(d.end)-today)/86400000);
+    const cls=diff<=30?'#dc2626':'#d97706';
+    const pct=Math.min(100,Math.round((1-diff/365)*100));
+    return `<div class="dday-card"><div class="dday-num"><div class="dn" style="color:${cls}">D-${diff}</div><div class="dl">${diff<=30?'긴급':'주의'}</div></div><div class="dday-info"><div class="dn2">${d.name} · ${d.dept}</div><div class="ds">${d.pos} · 만료일 ${d.end}</div></div><div class="dday-bar-wrap"><div class="pbar-bg"><div class="pbar" style="width:${pct}%;background:${cls}"></div></div><div style="font-size:10px;color:var(--t3);margin-top:3px;text-align:right">${pct}%</div></div></div>`;
+  }).join('');
+}
+
+// ── RESEARCH TABLE ───────────────────────────────────────────────
+function renderResearch(){
+  const today = new Date();
+  document.getElementById('research-body').innerHTML = RESEARCH.map(d=>{
+    const diff = Math.ceil((new Date(d.end)-today)/86400000);
+    const areaClr = d.area.includes('미국')?'b-blue':'b-gray';
+    return `<tr>
+      <td class="name">${d.name}</td><td style="font-size:11px">${d.dept}</td>
+      <td style="font-size:11px">${d.pos}</td>
+      <td style="font-size:11px;white-space:nowrap">${d.start} ~ ${d.end}</td>
+      <td><span class="badge ${areaClr}">${d.area}</span></td>
+      <td><span class="badge ${diff<=90?'b-amber':'b-gray'}">D-${diff}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TAB SWITCH ──────────────────────────────────────────────────
+function sw(n,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('p'+n).classList.add('on');
+}
+
+function saveMemo(){
+  localStorage.setItem('hpaik_memo',document.getElementById('memo').value);
+  alert('저장되었습니다.');
+}
+
+function setMonth(){}
+
+// ── INIT ────────────────────────────────────────────────────────
+document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+try{const m=localStorage.getItem('hpaik_memo');if(m)document.getElementById('memo').value=m;}catch(e){}
+initCompChart();
+initTopChart();
+initTypeChart();
+renderTable();
+renderPerfChart();
+renderContract();
+initDdayChart();
+renderResearch();
+</script>
+</body>
+</html>
