@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -118,10 +118,65 @@ textarea.memo:focus{border-color:#93c5fd}
 .dday-num{min-width:52px;text-align:center}
 .dday-num .dn{font-size:20px;font-weight:800;line-height:1}
 .dday-num .dl{font-size:10px;color:var(--t3);font-weight:500}
-.dday-info{flex:1}
-.dday-info .dn2{font-size:13px;font-weight:700;color:var(--t1)}
+.dday-info{flex:1;min-width:0}
+.dday-info .dn2{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dday-info .ds{font-size:11px;color:var(--t3);margin-top:2px}
 .dday-bar-wrap{width:80px;flex-shrink:0}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:639px){
+  /* Header 압축 */
+  .hdr-logo h1{font-size:13px}
+  .hdr-logo span{display:none}
+  .hdr-date{display:none}
+  select.hdr-sel{font-size:10px;padding:3px 6px}
+
+  /* 그리드: 2열 → 1열 */
+  .grid2{grid-template-columns:1fr}
+
+  /* 패딩 축소 */
+  .pane{padding:10px 10px 72px}
+  .chart-card{padding:12px}
+
+  /* KPI 폰트 */
+  .kpi-val{font-size:22px}
+  .kpi{padding:12px 12px 10px}
+
+  /* 실적조회 테이블: 직위·외래·입원·검진·검토기준·비율 숨김 */
+  #p1 table th:nth-child(4),#p1 table td:nth-child(4),
+  #p1 table th:nth-child(5),#p1 table td:nth-child(5),
+  #p1 table th:nth-child(6),#p1 table td:nth-child(6),
+  #p1 table th:nth-child(7),#p1 table td:nth-child(7),
+  #p1 table th:nth-child(10),#p1 table td:nth-child(10),
+  #p1 table th:nth-child(11),#p1 table td:nth-child(11){display:none}
+
+  /* 재계약 테이블: 직급 숨김 */
+  #p2 table th:nth-child(3),#p2 table td:nth-child(3){display:none}
+
+  /* 연구년 테이블: 직위·지역 숨김 */
+  #p3 table th:nth-child(3),#p3 table td:nth-child(3),
+  #p3 table th:nth-child(5),#p3 table td:nth-child(5){display:none}
+
+  /* D-day 카드: 우측 바 숨김 */
+  .dday-bar-wrap{display:none}
+
+  /* 차트 높이 조정 (inline style override) */
+  .chart-card > div[style*="height:220px"]{height:190px!important}
+  .chart-card > div[style*="height:260px"]{height:220px!important}
+
+  /* 인사변동 항목: 뱃지 줄 바꿈 허용 */
+  .chg-item{flex-wrap:wrap;gap:6px}
+  .chg-item .badge{margin-left:0!important;margin-top:2px}
+
+  /* 검색창 */
+  .search-wrap input{font-size:12px}
+
+  /* 탭 패딩 축소 */
+  .tab{padding:10px 12px;font-size:11px}
+
+  /* 섹션 헤더 */
+  .sec-hdr{margin:12px 0 8px}
+}
 </style>
 </head>
 <body>
