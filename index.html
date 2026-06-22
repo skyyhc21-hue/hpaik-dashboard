@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -422,40 +422,41 @@ document.addEventListener('keydown',e=>{
 
 <script>
 // ── DATA ────────────────────────────────────────────────────────
+// ★ rev 필드: 2025.03~2026.02 수익총진료비 기준 월평균(만원) — 기획 일일보고 PAIK-DR-004
 const PERF = [
   // 임상강사 (H0) — 실적검토 제외
-  {name:'나정호',dept:'안과',pos:'임상강사',type:'임상강사',out:4459,inp:3690,chk:0,rev:5847,criteria:'제외'},
+  {name:'나정호',dept:'안과',pos:'임상강사',type:'임상강사',out:4459,inp:3690,chk:0,rev:2936,criteria:'제외'},
   {name:'박준오',dept:'심장내과',pos:'임상강사',type:'임상강사',out:24,inp:1754,chk:0,rev:1493,criteria:'제외'},
   {name:'김수형',dept:'소화기내과',pos:'임상강사',type:'임상강사',out:414,inp:0,chk:0,rev:423,criteria:'제외'},
-  {name:'오병욱',dept:'호흡기내과',pos:'임상강사',type:'임상강사',out:52,inp:0,chk:0,rev:38,criteria:'제외'},
-  {name:'이학수',dept:'신경외과',pos:'임상강사',type:'임상강사',out:1,inp:0,chk:0,rev:0,criteria:'제외'},
+  {name:'오병욱',dept:'호흡기내과',pos:'임상강사',type:'임상강사',out:52,inp:0,chk:0,rev:1289,criteria:'제외'},
+  {name:'이학수',dept:'신경외과',pos:'임상강사',type:'임상강사',out:1,inp:0,chk:0,rev:168,criteria:'제외'},
   // 진료교수 (H0) — 발생수익 기준
-  {name:'왕희정',dept:'외과',pos:'진료교수',type:'진료교수',out:19223,inp:922867,chk:0,rev:128434,criteria:'수익'},
-  {name:'박강윤',dept:'안과',pos:'진료교수',type:'진료교수',out:27649,inp:17213,chk:0,rev:42058,criteria:'수익'},
-  {name:'구도훈',dept:'외과',pos:'진료교수',type:'진료교수',out:20444,inp:57775,chk:0,rev:49272,criteria:'수익'},
-  {name:'주상욱',dept:'신경외과',pos:'진료교수',type:'진료교수',out:6538,inp:319876,chk:0,rev:36832,criteria:'수익'},
-  {name:'장우익',dept:'심장혈관흉부외과',pos:'진료교수',type:'진료교수',out:1403,inp:268323,chk:0,rev:32931,criteria:'수익'},
-  {name:'김성제',dept:'소화기내과',pos:'진료교수',type:'진료교수',out:6384,inp:182889,chk:0,rev:24861,criteria:'수익'},
-  {name:'조윤성',dept:'심장내과',pos:'진료교수',type:'진료교수',out:6869,inp:183058,chk:0,rev:20826,criteria:'수익'},
-  {name:'송윤석',dept:'심장내과',pos:'진료교수',type:'진료교수',out:7412,inp:49530,chk:0,rev:20040,criteria:'수익'},
-  {name:'이준원',dept:'신경과',pos:'진료교수',type:'진료교수',out:8406,inp:90371,chk:0,rev:19196,criteria:'수익'},
-  {name:'박선양',dept:'혈액종양내과',pos:'진료교수',type:'진료교수',out:16798,inp:0,chk:0,rev:14538,criteria:'수익'},
-  {name:'최민성',dept:'산부인과',pos:'진료교수',type:'진료교수',out:5825,inp:27614,chk:0,rev:16708,criteria:'수익'},
+  {name:'왕희정',dept:'외과',pos:'진료교수',type:'진료교수',out:19223,inp:922867,chk:0,rev:118572,criteria:'수익'},
+  {name:'박강윤',dept:'안과',pos:'진료교수',type:'진료교수',out:27649,inp:17213,chk:0,rev:25495,criteria:'수익'},
+  {name:'구도훈',dept:'외과',pos:'진료교수',type:'진료교수',out:20444,inp:57775,chk:0,rev:39028,criteria:'수익'},
+  {name:'주상욱',dept:'신경외과',pos:'진료교수',type:'진료교수',out:6538,inp:319876,chk:0,rev:41292,criteria:'수익'},
+  {name:'장우익',dept:'심장혈관흉부외과',pos:'진료교수',type:'진료교수',out:1403,inp:268323,chk:0,rev:10544,criteria:'수익'},
+  {name:'김성제',dept:'소화기내과',pos:'진료교수',type:'진료교수',out:6384,inp:182889,chk:0,rev:8809,criteria:'수익'},
+  {name:'조윤성',dept:'심장내과',pos:'진료교수',type:'진료교수',out:6869,inp:183058,chk:0,rev:15951,criteria:'수익'},
+  {name:'송윤석',dept:'심장내과',pos:'진료교수',type:'진료교수',out:7412,inp:49530,chk:0,rev:12345,criteria:'수익'},
+  {name:'이준원',dept:'신경과',pos:'진료교수',type:'진료교수',out:8406,inp:90371,chk:0,rev:12044,criteria:'수익'},
+  {name:'박선양',dept:'혈액종양내과',pos:'진료교수',type:'진료교수',out:16798,inp:0,chk:0,rev:13167,criteria:'수익'},
+  {name:'최민성',dept:'산부인과',pos:'진료교수',type:'진료교수',out:5825,inp:27614,chk:0,rev:12971,criteria:'수익'},
   {name:'임소현',dept:'신경과',pos:'진료교수',type:'진료교수',out:4790,inp:5063,chk:0,rev:16571,criteria:'수익'},
-  {name:'홍채민',dept:'안과',pos:'진료교수',type:'진료교수',out:7717,inp:5489,chk:0,rev:11628,criteria:'수익'},
-  {name:'구형준',dept:'정형외과',pos:'진료교수',type:'진료교수',out:1784,inp:23939,chk:0,rev:13573,criteria:'수익'},
-  {name:'황지연',dept:'내분비대사내과',pos:'진료교수',type:'진료교수',out:12091,inp:570,chk:0,rev:4855,criteria:'수익'},
-  {name:'선욱',dept:'성형외과',pos:'진료교수',type:'진료교수',out:3857,inp:10716,chk:0,rev:7479,criteria:'수익'},
+  {name:'홍채민',dept:'안과',pos:'진료교수',type:'진료교수',out:7717,inp:5489,chk:0,rev:9075,criteria:'수익'},
+  {name:'구형준',dept:'정형외과',pos:'진료교수',type:'진료교수',out:1784,inp:23939,chk:0,rev:1803,criteria:'수익'},
+  {name:'황지연',dept:'내분비대사내과',pos:'진료교수',type:'진료교수',out:12091,inp:570,chk:0,rev:3664,criteria:'수익'},
+  {name:'선욱',dept:'성형외과',pos:'진료교수',type:'진료교수',out:3857,inp:10716,chk:0,rev:4063,criteria:'수익'},
   {name:'윤병우',dept:'이비인후과',pos:'진료교수',type:'진료교수',out:2766,inp:7390,chk:0,rev:4975,criteria:'수익'},
-  {name:'박세흠',dept:'재활의학과',pos:'진료교수',type:'진료교수',out:2100,inp:6199,chk:0,rev:4584,criteria:'수익'},
-  {name:'박순재',dept:'외과',pos:'진료교수',type:'진료교수',out:533,inp:10660,chk:0,rev:4792,criteria:'수익'},
+  {name:'박세흠',dept:'재활의학과',pos:'진료교수',type:'진료교수',out:2100,inp:6199,chk:0,rev:5271,criteria:'수익'},
+  {name:'박순재',dept:'외과',pos:'진료교수',type:'진료교수',out:533,inp:10660,chk:0,rev:4585,criteria:'수익'},
   {name:'박병화',dept:'신장내과',pos:'진료교수',type:'진료교수',out:2024,inp:15885,chk:0,rev:2037,criteria:'수익'},
-  {name:'배상균',dept:'핵의학과',pos:'진료교수',type:'진료교수',out:628,inp:71,chk:0,rev:948,criteria:'수익'},
-  {name:'왕한영',dept:'피부과',pos:'진료교수',type:'진료교수',out:1874,inp:0,chk:0,rev:737,criteria:'수익'},
+  {name:'배상균',dept:'핵의학과',pos:'진료교수',type:'진료교수',out:628,inp:71,chk:0,rev:382,criteria:'수익'},
+  {name:'왕한영',dept:'피부과',pos:'진료교수',type:'진료교수',out:1874,inp:0,chk:0,rev:1037,criteria:'수익'},
   // 진료교수 — 특수기준
-  {name:'최은준',dept:'호흡기내과',pos:'진료교수',type:'진료교수',out:2893,inp:166182,chk:0,rev:7158,criteria:'외래+MICU전담'},
+  {name:'최은준',dept:'호흡기내과',pos:'진료교수',type:'진료교수',out:2893,inp:166182,chk:0,rev:5860,criteria:'외래+MICU전담'},
   // 진료교수 — 실적검토 제외
-  {name:'선우유은',dept:'직업환경의학과',pos:'진료교수',type:'진료교수',out:17,inp:0,chk:0,rev:71,criteria:'제외'},
+  {name:'선우유은',dept:'직업환경의학과',pos:'진료교수',type:'진료교수',out:17,inp:0,chk:0,rev:183,criteria:'제외'},
   {name:'신원춘',dept:'입원의학센터',pos:'진료교수',type:'진료교수',out:41,inp:0,chk:0,rev:42,criteria:'제외'},
   // 계약제전문의 (H0) — 종합검진센터 파트단위 실적
   {name:'정다은',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:515,rev:28924,criteria:'제외'},
@@ -464,21 +465,21 @@ const PERF = [
   {name:'한유진',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:0,rev:0,criteria:'파트단위(내시경)'},
   {name:'김건희',dept:'종합검진센터',pos:'계약제전문의',type:'계약제',out:0,inp:0,chk:0,rev:0,criteria:'파트단위(내시경)'},
   // 전임교원 대표 (H0)
-  {name:'김일환',dept:'혈액종양내과',pos:'교수',type:'전임',out:67612,inp:1392776,chk:0,rev:244046},
-  {name:'임성남',dept:'혈액종양내과',pos:'부교수',type:'전임',out:44333,inp:1039888,chk:0,rev:177789},
-  {name:'강명주',dept:'혈액종양내과',pos:'교수',type:'전임',out:58987,inp:694687,chk:0,rev:134098},
-  {name:'지용일',dept:'산부인과',pos:'교수',type:'전임',out:26881,inp:118285,chk:0,rev:109314},
-  {name:'진성철',dept:'신경외과',pos:'교수',type:'전임',out:14865,inp:394669,chk:0,rev:100018},
-  {name:'이용준',dept:'혈액종양내과',pos:'조교수',type:'전임',out:23448,inp:286070,chk:0,rev:82177},
-  {name:'김양욱',dept:'신장내과',pos:'교수',type:'전임',out:46206,inp:370339,chk:0,rev:75116},
-  {name:'박봉수',dept:'신장내과',pos:'교수',type:'전임',out:23796,inp:447963,chk:0,rev:61711},
-  {name:'허창민',dept:'신장내과',pos:'조교수',type:'전임',out:13656,inp:758904,chk:0,rev:60055},
-  {name:'조선미',dept:'방사선종양학과',pos:'부교수',type:'전임',out:5001,inp:0,chk:0,rev:52098},
-  {name:'최준혁',dept:'소화기내과',pos:'부교수',type:'전임',out:13592,inp:195121,chk:0,rev:32561},
-  {name:'박승하',dept:'소화기내과',pos:'교수',type:'전임',out:15776,inp:270338,chk:0,rev:20589},
-  {name:'김태오',dept:'소화기내과',pos:'교수',type:'전임',out:21062,inp:16446,chk:0,rev:30853},
-  {name:'김성호',dept:'류마티스내과',pos:'교수',type:'전임',out:23751,inp:0,chk:0,rev:17387},
-  {name:'이성근',dept:'류마티스내과',pos:'교수',type:'전임',out:12901,inp:768,chk:0,rev:13770},
+  {name:'김일환',dept:'혈액종양내과',pos:'교수',type:'전임',out:67612,inp:1392776,chk:0,rev:201690},
+  {name:'임성남',dept:'혈액종양내과',pos:'부교수',type:'전임',out:44333,inp:1039888,chk:0,rev:124229},
+  {name:'강명주',dept:'혈액종양내과',pos:'교수',type:'전임',out:58987,inp:694687,chk:0,rev:141066},
+  {name:'지용일',dept:'산부인과',pos:'교수',type:'전임',out:26881,inp:118285,chk:0,rev:120733},
+  {name:'진성철',dept:'신경외과',pos:'교수',type:'전임',out:14865,inp:394669,chk:0,rev:76032},
+  {name:'이용준',dept:'혈액종양내과',pos:'조교수',type:'전임',out:23448,inp:286070,chk:0,rev:79621},
+  {name:'김양욱',dept:'신장내과',pos:'교수',type:'전임',out:46206,inp:370339,chk:0,rev:61950},
+  {name:'박봉수',dept:'신장내과',pos:'교수',type:'전임',out:23796,inp:447963,chk:0,rev:41653},
+  {name:'허창민',dept:'신장내과',pos:'조교수',type:'전임',out:13656,inp:758904,chk:0,rev:30193},
+  {name:'조선미',dept:'방사선종양학과',pos:'부교수',type:'전임',out:5001,inp:0,chk:0,rev:40615},
+  {name:'최준혁',dept:'소화기내과',pos:'부교수',type:'전임',out:13592,inp:195121,chk:0,rev:37007},
+  {name:'박승하',dept:'소화기내과',pos:'교수',type:'전임',out:15776,inp:270338,chk:0,rev:21947},
+  {name:'김태오',dept:'소화기내과',pos:'교수',type:'전임',out:21062,inp:16446,chk:0,rev:33219},
+  {name:'김성호',dept:'류마티스내과',pos:'교수',type:'전임',out:23751,inp:0,chk:0,rev:16395},
+  {name:'이성근',dept:'류마티스내과',pos:'교수',type:'전임',out:12901,inp:768,chk:0,rev:13802},
 ];
 
 const CONTRACTS = [
@@ -503,6 +504,7 @@ const CONTRACTS = [
   {name:'왕한영',dept:'피부과',pos:'진료교수',end:'2027-02-28'},
   {name:'신동우',dept:'외과',pos:'진료교수',end:'2027-02-28'},
   {name:'장상태',dept:'외과',pos:'진료교수',end:'2027-02-28'},
+  {name:'김현수',dept:'심장혈관흉부외과',pos:'진료교수',end:'2027-08-31'},
   {name:'장우익',dept:'심장혈관흉부외과',pos:'진료교수',end:'2027-02-28'},
   {name:'선욱',dept:'성형외과',pos:'진료교수',end:'2027-02-28'},
   {name:'박강윤',dept:'안과',pos:'진료교수',end:'2027-02-28'},
@@ -846,3 +848,5 @@ renderResearch();
 </script>
 </body>
 </html>
+
+
