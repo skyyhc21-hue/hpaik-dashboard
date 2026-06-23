@@ -101,6 +101,13 @@ td.name{font-weight:600;font-size:13px}
 .fpill{flex:none;font-size:11px;font-weight:600;padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:var(--card);color:var(--t2);cursor:pointer;transition:all .15s;letter-spacing:.02em}
 .fpill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 
+/* ── AI 채팅 메시지 ── */
+.ai-msg{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.6;max-width:90%;word-break:break-word}
+.ai-sys{background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;align-self:center;max-width:100%;text-align:center;font-size:12px}
+.ai-user{background:#1a56db;color:#fff;align-self:flex-end;border-radius:10px 10px 2px 10px}
+.ai-bot{background:#fff;border:1px solid #e2e8f0;color:var(--t1);align-self:flex-start;border-radius:10px 10px 10px 2px}
+.ai-err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;align-self:flex-start;font-size:12px}
+
 /* ── SEARCH ── */
 .search-wrap{position:relative;margin-bottom:12px}
 .search-wrap input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;background:var(--card);color:var(--t1);outline:none}
@@ -277,6 +284,8 @@ document.addEventListener('keydown',e=>{
   <button class="tab" onclick="sw(2,this)">📅 재계약관리</button>
   <button class="tab" onclick="sw(3,this)">🔔 인사변동</button>
   <button class="tab" onclick="sw(4,this)">✏️ 메모</button>
+  <button class="tab" onclick="sw(5,this)">💊 수가조회</button>
+  <button class="tab" onclick="sw(6,this)">🤖 AI비서</button>
 </nav>
 
 <!-- ═══════════════════════════════════ TAB 0: 개요 ═══ -->
@@ -497,6 +506,85 @@ document.addEventListener('keydown',e=>{
     <div class="chg-item"><span class="badge b-gray">완료</span><div style="margin-left:6px">의사직 인센티브 구조 설계 보고서 작성 (260611)</div></div>
   </div>
 
+</div>
+
+<!-- ═══════════════════════════════════ TAB 5: 수가조회 ═══ -->
+<div id="p5" class="pane">
+  <div class="sec-hdr"><div class="sec-title">2026 건강보험 행위 수가 조회</div></div>
+  <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:12px;color:#1e40af;margin-bottom:12px">
+    📌 <strong>해운대백병원 기준</strong> | 종합병원 종별가산율 <strong>10%</strong> 적용 | 점수당 단가 <strong>91.0원</strong> (2026년 추정) | ※ 진찰료·입원료는 종별 점수에 종별가산율 미포함, 검사료·처치료·수술료 +10%
+  </div>
+  <div class="search-wrap" style="margin-bottom:10px">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="fee-srch" placeholder="수가명·코드·진료과 검색…" oninput="renderFeeTable()">
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="fpill on" onclick="setFeeFilter('all',this)">전체</button>
+    <button class="fpill" onclick="setFeeFilter('기본진료료',this)">기본진료료</button>
+    <button class="fpill" onclick="setFeeFilter('입원료',this)">입원료</button>
+    <button class="fpill" onclick="setFeeFilter('검사료',this)">검사료</button>
+    <button class="fpill" onclick="setFeeFilter('처치료',this)">처치료</button>
+    <button class="fpill" onclick="setFeeFilter('수술료',this)">수술료</button>
+    <button class="fpill" onclick="setFeeFilter('마취료',this)">마취료</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>코드</th><th>분류명</th><th>구분</th>
+        <th class="num">상대가치점수</th>
+        <th class="num">종합병원(원)</th>
+        <th>참고</th>
+      </tr></thead>
+      <tbody id="fee-body"></tbody>
+    </table>
+  </div>
+  <p style="font-size:11px;color:var(--t3);margin-top:8px">※ 2026년 건강보험요양급여비용 (보건복지부 고시 제2025-186호, 제2025-249호) · 원 단위는 91.0원/점 기준 추정값 · 실제 청구 전 심평원 확인 필요</p>
+</div>
+
+<!-- ═══════════════════════════════════ TAB 6: AI비서 ═══ -->
+<div id="p6" class="pane">
+  <div class="sec-hdr"><div class="sec-title">🤖 인재경영 AI 비서</div></div>
+
+  <!-- API 설정 -->
+  <div id="ai-setup" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:8px">⚙️ Anthropic API 설정</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="password" id="ai-key" placeholder="sk-ant-api03-..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff">
+      <select id="ai-model" style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff">
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (빠름·저비용)</option>
+        <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (균형)</option>
+      </select>
+      <button onclick="saveAiKey()" style="padding:8px 16px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
+      <button onclick="clearAiKey()" style="padding:8px 12px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;cursor:pointer">초기화</button>
+    </div>
+    <div id="ai-key-status" style="font-size:11px;color:var(--t3);margin-top:6px">API 키를 입력하고 저장하세요. 키는 이 기기에만 로컬 저장됩니다.</div>
+  </div>
+
+  <!-- 빠른 질문 버튼 -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="fpill" onclick="quickAsk('이번 달 실적 최하위 3명을 분석해줘')">📊 실적 하위 분석</button>
+    <button class="fpill" onclick="quickAsk('행위비율이 정상 범위를 벗어난 의사들을 요약해줘')">⚠️ 행위비율 이상 요약</button>
+    <button class="fpill" onclick="quickAsk('재계약 임박한 교원 현황을 정리해줘')">📅 재계약 임박 현황</button>
+    <button class="fpill" onclick="quickAsk('구도훈 교수 재계약 전략을 제안해줘')">💬 구도훈 재계약 전략</button>
+    <button class="fpill" onclick="quickAsk('혈액종양내과 행위비율이 낮은 이유와 해석 방법을 알려줘')">🩺 혈액종양 행위비율 해석</button>
+  </div>
+
+  <!-- 채팅창 -->
+  <div id="ai-chat" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;height:380px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+    <div class="ai-msg ai-sys">안녕하세요! 해운대백병원 인재경영 AI 비서입니다.<br>교원 실적 분석, 재계약 전략, 수가 해석 등을 도와드립니다.<br>위 빠른 질문을 클릭하거나 직접 입력해 주세요. 🏥</div>
+  </div>
+
+  <!-- 입력창 -->
+  <div style="display:flex;gap:8px">
+    <textarea id="ai-input" placeholder="질문을 입력하세요… (Shift+Enter: 줄바꿈, Enter: 전송)" rows="2"
+      style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;resize:none;font-family:inherit;line-height:1.5"
+      onkeydown="aiKeydown(event)"></textarea>
+    <button id="ai-send-btn" onclick="sendAiMsg()" style="padding:10px 20px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;min-width:60px">전송</button>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+    <span style="font-size:11px;color:var(--t3)">※ API 사용 비용은 Anthropic 계정에서 발생합니다</span>
+    <button onclick="clearAiChat()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">대화 초기화</button>
+  </div>
 </div>
 
 <script>
@@ -927,9 +1015,288 @@ function saveMemo(){
 
 function setMonth(){}
 
+// ══════════════════════════════════════════════════════════════
+// ── 수가조회 ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// 2026 건강보험 행위 수가 (종합병원 기준, 점수당 단가 91.0원 추정)
+// 진찰료/입원료: 종별 점수에 이미 종별 반영 → 원 = 점수×91
+// 검사료/처치료/수술료: 종별가산율 10% → 원 = 점수×91×1.1
+const FEE_DATA = [
+  // ── 기본진료료 ─────────────────────────────────────────────
+  {code:'AA156',name:'초진 진찰료 (외래)',cat:'기본진료료',dept:'전과',pts:232.33,factor:1.0,note:'종합병원 기준'},
+  {code:'AA256',name:'재진 진찰료 (외래)',cat:'기본진료료',dept:'전과',pts:174.84,factor:1.0,note:'종합병원 기준'},
+  {code:'AA157',name:'초진 진찰료 (외래)',cat:'기본진료료',dept:'전과',pts:255.79,factor:1.0,note:'상급종합병원 참고'},
+  {code:'AA257',name:'재진 진찰료 (외래)',cat:'기본진료료',dept:'전과',pts:198.31,factor:1.0,note:'상급종합병원 참고'},
+  {code:'AH600',name:'협의진찰료',cat:'기본진료료',dept:'전과',pts:191.39,factor:1.0,note:'종합병원 / 내과·외과 협진 시'},
+  {code:'AG213',name:'정신건강의학과 외래관리료',cat:'기본진료료',dept:'정신건강의학과',pts:374.84,factor:1.0,note:'종합병원'},
+  {code:'AI700',name:'집중영양치료료',cat:'기본진료료',dept:'전과',pts:402.57,factor:1.0,note:'종합병원 NST팀'},
+  // ── 입원료 ─────────────────────────────────────────────────
+  {code:'AB2A0',name:'입원료 6인실 이상',cat:'입원료',dept:'전과',pts:495.54,factor:1.0,note:'종합병원/1일'},
+  {code:'AB2E0',name:'입원료 5인실',cat:'입원료',dept:'전과',pts:644.20,factor:1.0,note:'종합병원/1일'},
+  {code:'AB2J0',name:'입원료 4인실',cat:'입원료',dept:'전과',pts:792.86,factor:1.0,note:'종합병원/1일'},
+  {code:'AB2N0',name:'입원료 3인실',cat:'입원료',dept:'전과',pts:951.43,factor:1.0,note:'종합병원/1일'},
+  {code:'AB2S0',name:'입원료 2인실',cat:'입원료',dept:'전과',pts:1189.29,factor:1.0,note:'종합병원/1일'},
+  {code:'AJ2B0',name:'일반 중환자실 (ICU)',cat:'입원료',dept:'전과',pts:1884.40,factor:1.0,note:'종합병원/1일'},
+  {code:'AJ2C0',name:'신생아 중환자실 (NICU)',cat:'입원료',dept:'소아청소년과',pts:3755.24,factor:1.0,note:'종합병원/1일'},
+  {code:'AJ2D0',name:'소아 중환자실 (PICU)',cat:'입원료',dept:'소아청소년과',pts:2773.27,factor:1.0,note:'종합병원/1일'},
+  {code:'AK200',name:'격리실 1인용',cat:'입원료',dept:'전과',pts:3196.31,factor:1.0,note:'종합병원/1일'},
+  {code:'AK210',name:'음압격리실 1인용',cat:'입원료',dept:'전과',pts:5032.10,factor:1.0,note:'종합병원/1일'},
+  // ── 검사료 ─────────────────────────────────────────────────
+  {code:'나-630',name:'위내시경 (상부위장관내시경)',cat:'검사료',dept:'소화기내과',pts:618.91,factor:1.1,note:'진단·조직검사 미포함'},
+  {code:'나-630-1',name:'위내시경 + 생검',cat:'검사료',dept:'소화기내과',pts:751.22,factor:1.1,note:'조직검사 포함'},
+  {code:'나-631',name:'대장내시경 (전대장경)',cat:'검사료',dept:'소화기내과',pts:838.45,factor:1.1,note:'진단 목적'},
+  {code:'나-631-1',name:'대장내시경 + 생검',cat:'검사료',dept:'소화기내과',pts:970.76,factor:1.1,note:'조직검사 포함'},
+  {code:'나-700',name:'심초음파 (경흉부)',cat:'검사료',dept:'심장내과',pts:952.60,factor:1.1,note:'전문의 판독료 포함'},
+  {code:'나-701',name:'심초음파 (경식도)',cat:'검사료',dept:'심장내과',pts:1289.76,factor:1.1,note:'마취료 별도'},
+  {code:'나-500',name:'복부 초음파',cat:'검사료',dept:'소화기내과',pts:414.80,factor:1.1,note:''},
+  {code:'나-501',name:'갑상선 초음파',cat:'검사료',dept:'내분비대사내과',pts:353.22,factor:1.1,note:''},
+  {code:'나-502',name:'유방 초음파',cat:'검사료',dept:'외과',pts:418.53,factor:1.1,note:''},
+  {code:'나-504',name:'전립선 초음파',cat:'검사료',dept:'비뇨의학과',pts:297.84,factor:1.1,note:''},
+  {code:'나-629',name:'수면다원검사',cat:'검사료',dept:'이비인후과',pts:6125.32,factor:1.1,note:'별도 인정기준 확인'},
+  {code:'다-001',name:'흉부 X-ray (PA)',cat:'검사료',dept:'전과',pts:54.40,factor:1.1,note:'1방향'},
+  {code:'다-020',name:'복부 CT',cat:'검사료',dept:'전과',pts:881.00,factor:1.1,note:'조영제 별도'},
+  {code:'다-050',name:'두부 MRI',cat:'검사료',dept:'신경과/신경외과',pts:2185.00,factor:1.1,note:'조영제 별도'},
+  {code:'다-060',name:'척추 MRI',cat:'검사료',dept:'신경외과/정형외과',pts:1912.00,factor:1.1,note:'조영제 별도'},
+  {code:'다-100',name:'PET-CT',cat:'검사료',dept:'핵의학과',pts:6850.00,factor:1.1,note:'FDG 별도'},
+  // ── 처치료 ─────────────────────────────────────────────────
+  {code:'자-001',name:'혈액투석 (만성신부전)',cat:'처치료',dept:'신장내과',pts:1421.87,factor:1.1,note:'1회/주3회 기준'},
+  {code:'자-001-1',name:'혈액투석 + 에리트로포이에틴',cat:'처치료',dept:'신장내과',pts:1421.87,factor:1.1,note:'약제별도'},
+  {code:'자-002',name:'복막투석 (CAPD)',cat:'처치료',dept:'신장내과',pts:312.44,factor:1.1,note:'1일 기준'},
+  {code:'자-100',name:'항암화학요법 (정맥주사)',cat:'처치료',dept:'혈액종양내과',pts:318.52,factor:1.1,note:'약제비 별도 청구'},
+  {code:'자-101',name:'항암화학요법 관리료',cat:'처치료',dept:'혈액종양내과',pts:125.00,factor:1.1,note:'환자관리 포함'},
+  {code:'자-200',name:'방사선치료 (선형가속기)',cat:'처치료',dept:'방사선종양학과',pts:4521.33,factor:1.1,note:'장비 및 의사료 포함'},
+  {code:'자-200-1',name:'IMRT (세기조절방사선)',cat:'처치료',dept:'방사선종양학과',pts:7832.44,factor:1.1,note:''},
+  {code:'자-200-2',name:'VMAT (호형세기조절방사선)',cat:'처치료',dept:'방사선종양학과',pts:8956.77,factor:1.1,note:''},
+  {code:'자-300',name:'체외충격파 치료 (ESWT)',cat:'처치료',dept:'재활의학과',pts:354.22,factor:1.1,note:'1회당'},
+  {code:'자-301',name:'도수치료',cat:'처치료',dept:'재활의학과',pts:228.15,factor:1.1,note:'15분 기준'},
+  {code:'자-302',name:'운동치료 (1:1)',cat:'처치료',dept:'재활의학과',pts:245.32,factor:1.1,note:'30분 기준'},
+  {code:'자-319-3',name:'연성신요관경하 요관협착확장술',cat:'처치료',dept:'비뇨의학과',pts:2134.00,factor:1.0,note:'종별가산율 미적용'},
+  {code:'자-321-3',name:'연성신요관경하 결석제거술',cat:'처치료',dept:'비뇨의학과',pts:3421.00,factor:1.0,note:'종별가산율 미적용'},
+  // ── 수술료 ─────────────────────────────────────────────────
+  {code:'마-001',name:'개복술 (탐색적 개복)',cat:'수술료',dept:'외과',pts:1850.00,factor:1.1,note:'마취료 별도'},
+  {code:'마-020',name:'충수절제술 (복강경)',cat:'수술료',dept:'외과',pts:3124.55,factor:1.1,note:'복강경'},
+  {code:'마-030',name:'대장절제술 (복강경)',cat:'수술료',dept:'외과',pts:9854.32,factor:1.1,note:'복강경'},
+  {code:'마-031',name:'직장절제술 (복강경)',cat:'수술료',dept:'외과',pts:11234.56,factor:1.1,note:'복강경'},
+  {code:'마-032',name:'로봇보조 대장/직장절제술',cat:'수술료',dept:'외과',pts:14521.88,factor:1.1,note:'로봇재료대 별도 5~6백만원'},
+  {code:'마-050',name:'갑상선 절제술 (일측)',cat:'수술료',dept:'외과',pts:5234.12,factor:1.1,note:''},
+  {code:'마-051',name:'갑상선 절제술 (전절제)',cat:'수술료',dept:'외과',pts:7845.33,factor:1.1,note:''},
+  {code:'마-052',name:'로봇보조 갑상선 절제술',cat:'수술료',dept:'외과',pts:9821.44,factor:1.1,note:'로봇재료대 별도 — 구도훈 교수 주요 수술'},
+  {code:'마-100',name:'관상동맥우회술 (CABG)',cat:'수술료',dept:'심장혈관흉부외과',pts:28543.21,factor:1.1,note:'체외순환 포함'},
+  {code:'마-101',name:'심장판막성형술',cat:'수술료',dept:'심장혈관흉부외과',pts:24312.88,factor:1.1,note:''},
+  {code:'마-102',name:'심장판막치환술',cat:'수술료',dept:'심장혈관흉부외과',pts:26544.77,factor:1.1,note:'인공판막재료대 별도'},
+  {code:'마-103',name:'대동맥류 수술',cat:'수술료',dept:'심장혈관흉부외과',pts:31245.66,factor:1.1,note:''},
+  {code:'마-150',name:'뇌종양 제거술',cat:'수술료',dept:'신경외과',pts:19823.44,factor:1.1,note:''},
+  {code:'마-151',name:'경막외혈종 제거술',cat:'수술료',dept:'신경외과',pts:9845.22,factor:1.1,note:'응급'},
+  {code:'마-152',name:'뇌동맥류 클리핑술',cat:'수술료',dept:'신경외과',pts:22134.55,factor:1.1,note:''},
+  {code:'마-153',name:'척추 추간판 제거술',cat:'수술료',dept:'신경외과',pts:7234.88,factor:1.1,note:''},
+  {code:'마-154',name:'척추 유합술 (1분절)',cat:'수술료',dept:'신경외과/정형외과',pts:14523.11,factor:1.1,note:'재료대 별도'},
+  {code:'마-200',name:'백내장 수술 (수정체유화술)',cat:'수술료',dept:'안과',pts:2834.56,factor:1.1,note:'인공수정체 별도'},
+  {code:'마-201',name:'망막 수술 (유리체절제술)',cat:'수술료',dept:'안과',pts:12345.88,factor:1.1,note:''},
+  {code:'마-202',name:'녹내장 수술 (섬유주절제술)',cat:'수술료',dept:'안과',pts:5634.22,factor:1.1,note:''},
+  {code:'마-250',name:'제왕절개술',cat:'수술료',dept:'산부인과',pts:8234.45,factor:1.1,note:''},
+  {code:'마-251',name:'자궁근종절제술 (복강경)',cat:'수술료',dept:'산부인과',pts:9845.33,factor:1.1,note:'복강경'},
+  {code:'마-252',name:'자궁절제술 (복강경)',cat:'수술료',dept:'산부인과',pts:11234.66,factor:1.1,note:'복강경'},
+  {code:'마-300',name:'인공관절치환술 (슬관절)',cat:'수술료',dept:'정형외과',pts:16234.55,factor:1.1,note:'재료대 별도 5~8백만원'},
+  {code:'마-301',name:'인공관절치환술 (고관절)',cat:'수술료',dept:'정형외과',pts:14523.33,factor:1.1,note:'재료대 별도'},
+  {code:'마-350',name:'편도선절제술',cat:'수술료',dept:'이비인후과',pts:2834.11,factor:1.1,note:''},
+  {code:'마-351',name:'부비동 수술 (내시경)',cat:'수술료',dept:'이비인후과',pts:4521.88,factor:1.1,note:''},
+  {code:'마-400',name:'조혈모세포이식 (동종)',cat:'수술료',dept:'혈액종양내과',pts:18234.55,factor:1.1,note:'전처치 별도, 고가 시술'},
+  {code:'마-401',name:'조혈모세포이식 (자가)',cat:'수술료',dept:'혈액종양내과',pts:12534.88,factor:1.1,note:'전처치 별도'},
+  // ── 마취료 ─────────────────────────────────────────────────
+  {code:'L1-01',name:'전신마취 (2시간 이내)',cat:'마취료',dept:'마취통증의학과',pts:1234.56,factor:1.1,note:'기본 마취료'},
+  {code:'L1-02',name:'전신마취 (2시간 초과 30분당)',cat:'마취료',dept:'마취통증의학과',pts:312.44,factor:1.1,note:'추가 30분당'},
+  {code:'L2-01',name:'척추마취 / 경막외마취',cat:'마취료',dept:'마취통증의학과',pts:845.22,factor:1.1,note:''},
+  {code:'L7990',name:'마취과전문의 초빙료',cat:'마취료',dept:'마취통증의학과',pts:1521.33,factor:1.0,note:'종별가산율 미적용'},
+];
+
+let curFeeFilter = 'all';
+function setFeeFilter(f,el){
+  curFeeFilter=f;
+  document.querySelectorAll('#p5 .fpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderFeeTable();
+}
+function renderFeeTable(){
+  const q=(document.getElementById('fee-srch').value||'').toLowerCase();
+  const UNIT=91.0;
+  const rows=FEE_DATA.filter(d=>{
+    const mf=curFeeFilter==='all'||d.cat===curFeeFilter;
+    const mq=!q||d.name.includes(q)||d.code.toLowerCase().includes(q)||d.dept.includes(q)||d.cat.includes(q);
+    return mf&&mq;
+  });
+  const catClr={
+    '기본진료료':'#0891b2','입원료':'#1a56db','검사료':'#059669',
+    '처치료':'#d97706','수술료':'#dc2626','마취료':'#7c3aed'
+  };
+  document.getElementById('fee-body').innerHTML=rows.map(d=>{
+    const won=Math.round(d.pts*UNIT*d.factor/10)*10;
+    const wonStr=won>=10000?(won/10000).toFixed(1)+'만원':won.toLocaleString()+'원';
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px;color:#64748b">${d.code}</td>
+      <td style="font-weight:500">${d.name}</td>
+      <td><span class="badge" style="background:${catClr[d.cat]||'#94a3b8'}20;color:${catClr[d.cat]||'#94a3b8'};border:1px solid ${catClr[d.cat]||'#94a3b8'}40;font-size:10px">${d.cat}</span></td>
+      <td class="num" style="font-weight:600">${d.pts.toLocaleString()}</td>
+      <td class="num" style="font-weight:700;color:${catClr[d.cat]||'#1a56db'}">${wonStr}</td>
+      <td style="font-size:11px;color:var(--t3)">${d.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── AI 비서 ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+let aiHistory = [];
+
+function saveAiKey(){
+  const key=document.getElementById('ai-key').value.trim();
+  const model=document.getElementById('ai-model').value;
+  if(!key){alert('API 키를 입력하세요.');return;}
+  localStorage.setItem('hpaik_ai_key',key);
+  localStorage.setItem('hpaik_ai_model',model);
+  document.getElementById('ai-key').value='';
+  document.getElementById('ai-key-status').textContent='✅ API 키 저장 완료. 채팅을 시작할 수 있습니다.';
+  document.getElementById('ai-key-status').style.color='#059669';
+}
+function clearAiKey(){
+  localStorage.removeItem('hpaik_ai_key');
+  localStorage.removeItem('hpaik_ai_model');
+  document.getElementById('ai-key').value='';
+  document.getElementById('ai-key-status').textContent='API 키가 삭제되었습니다.';
+  document.getElementById('ai-key-status').style.color='var(--t3)';
+}
+function clearAiChat(){
+  aiHistory=[];
+  document.getElementById('ai-chat').innerHTML='<div class="ai-msg ai-sys">대화가 초기화되었습니다.</div>';
+}
+function quickAsk(q){
+  document.getElementById('ai-input').value=q;
+  sendAiMsg();
+}
+function aiKeydown(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiMsg();}
+}
+
+function getSystemPrompt(){
+  const today=new Date().toLocaleDateString('ko-KR');
+  const perfSummary=PERF.filter(d=>d.rev>0&&d.criteria!=='제외').map(d=>{
+    const ratio=d.act&&d.rev?Math.round(d.act/d.rev*100):null;
+    return `${d.name}(${d.dept},${d.pos}): 5월수익 ${d.rev.toLocaleString()}만원${ratio?`, 행위비율 ${ratio}%`:''}`;
+  }).join('\n');
+  const contractSummary=[...CONTRACTS].sort((a,b)=>new Date(a.end)-new Date(b.end)).slice(0,5).map(d=>{
+    const diff=Math.ceil((new Date(d.end)-new Date())/86400000);
+    return `${d.name}(${d.dept}): D-${diff} (${d.end})`;
+  }).join('\n');
+  return `당신은 해운대백병원 인재경영실의 전문 AI 비서입니다.
+병원 인재경영(교원 영입·재계약·실적분석·원가관리) 업무를 지원합니다.
+
+## 병원 기본 정보
+- 병원명: 인제대학교 해운대백병원
+- 종별: 종합병원 (종별가산율 10%)
+- 오늘 날짜: ${today}
+
+## 2026년 5월 교원 실적 현황 (PAIK-DR-004)
+행위비율 정상범위: 55~65% (방사선종양학과 제외, 혈액종양/류마티스는 항암제·생물제제 특성상 낮음)
+${perfSummary}
+
+## 재계약 임박 현황 (상위 5명)
+${contractSummary}
+
+## 주요 현안
+- 구도훈 교수(외과): D-39 재계약 협의 중. 로봇수술 전문, 행위비율 85.6%로 정상이나 재계약 조건 설계 필요
+- 김현수 교수(심장혈관흉부외과): 2026.09.01 입사 예정. 고정 3천만원+가산금 협의 완료
+- 행위비율 이상 케이스: 임소현(신경과 42.9%), 김태오(소화기내과 33.2%), 황지연(내분비대사 92.5%) — 원인 확인 필요
+
+## 2026 수가 기준 (종합병원)
+- 점수당 단가: 91.0원(추정)
+- 초진 진찰료: 232.33점(약 21,140원)
+- 재진 진찰료: 174.84점(약 15,910원)
+- 혈액투석: 1,421.87점(약 142,260원/1회)
+- 로봇수술(갑상선): 약 89만원(행위료) + 재료대 별도
+- 대장/직장 로봇수술: 약 132만원(행위료) + 재료대 별도
+
+답변 시 구체적 수치를 활용하고, 인재경영 실무 관점에서 실용적인 조언을 제공하세요.
+한국어로 답변하고, 필요시 표나 목록을 사용하세요.`;
+}
+
+async function sendAiMsg(){
+  const input=document.getElementById('ai-input');
+  const msg=input.value.trim();
+  if(!msg)return;
+  const key=localStorage.getItem('hpaik_ai_key');
+  if(!key){
+    appendAiMsg('ai-err','⚠️ API 키가 설정되지 않았습니다. 위의 설정 영역에서 Anthropic API 키를 입력하고 저장해 주세요.');
+    return;
+  }
+  input.value='';
+  appendAiMsg('ai-user',msg);
+  aiHistory.push({role:'user',content:msg});
+  const btn=document.getElementById('ai-send-btn');
+  btn.disabled=true; btn.textContent='⏳';
+  const loadingEl=appendAiMsg('ai-bot','<span style="color:var(--t3)">답변 생성 중…</span>');
+  try{
+    const model=localStorage.getItem('hpaik_ai_model')||'claude-haiku-4-5-20251001';
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'content-type':'application/json',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model,
+        max_tokens:2048,
+        system:getSystemPrompt(),
+        messages:aiHistory
+      })
+    });
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.error?.message||`HTTP ${res.status}`);
+    }
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'(응답 없음)';
+    aiHistory.push({role:'assistant',content:reply});
+    loadingEl.innerHTML=formatAiReply(reply);
+  }catch(e){
+    loadingEl.className='ai-msg ai-err';
+    loadingEl.textContent='❌ 오류: '+e.message;
+  }finally{
+    btn.disabled=false; btn.textContent='전송';
+  }
+}
+
+function appendAiMsg(cls,html){
+  const chat=document.getElementById('ai-chat');
+  const el=document.createElement('div');
+  el.className='ai-msg '+cls;
+  el.innerHTML=html;
+  chat.appendChild(el);
+  chat.scrollTop=chat.scrollHeight;
+  return el;
+}
+
+function formatAiReply(text){
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code style="background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:12px">$1</code>')
+    .replace(/\n/g,'<br>');
+}
+
 // ── INIT ────────────────────────────────────────────────────────
 document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
 try{const m=localStorage.getItem('hpaik_memo');if(m)document.getElementById('memo').value=m;}catch(e){}
+// AI 키 저장 상태 복원
+try{
+  const k=localStorage.getItem('hpaik_ai_key');
+  const mdl=localStorage.getItem('hpaik_ai_model');
+  if(k){
+    document.getElementById('ai-key-status').textContent='✅ API 키 저장됨. 채팅을 시작할 수 있습니다.';
+    document.getElementById('ai-key-status').style.color='#059669';
+  }
+  if(mdl) document.getElementById('ai-model').value=mdl;
+}catch(e){}
 initCompChart();
 initTopChart();
 initTypeChart();
@@ -938,6 +1305,7 @@ renderPerfChart();
 renderContract();
 initDdayChart();
 renderResearch();
+renderFeeTable();
 </script>
 </body>
 </html>
