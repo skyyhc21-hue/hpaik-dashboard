@@ -553,13 +553,7 @@ document.addEventListener('keydown',e=>{
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input type="password" id="ai-key" placeholder="AIzaSy..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff">
       <select id="ai-model" style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff">
-        <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
-        <option value="gemini-2.0-flash-001">gemini-2.0-flash-001</option>
-        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-        <option value="gemini-pro">gemini-pro</option>
+        <option value="gemini-2.0-flash-lite" selected>Gemini 2.0 Flash Lite (무료)</option>
       </select>
       <button onclick="saveAiKey()" style="padding:8px 16px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
       <button onclick="clearAiKey()" style="padding:8px 12px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;cursor:pointer">초기화</button>
