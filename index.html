@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -549,17 +549,21 @@ document.addEventListener('keydown',e=>{
 
   <!-- API 설정 -->
   <div id="ai-setup" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px">
-    <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:8px">⚙️ Anthropic API 설정</div>
+    <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:8px">⚙️ Google Gemini API 설정 <span style="font-size:11px;font-weight:400;color:#059669;background:#ecfdf5;padding:2px 7px;border-radius:10px;margin-left:4px">무료</span></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="password" id="ai-key" placeholder="sk-ant-api03-..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff">
+      <input type="password" id="ai-key" placeholder="AIzaSy..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff">
       <select id="ai-model" style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff">
-        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (빠름·저비용)</option>
-        <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (균형)</option>
+        <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (빠름·무료)</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash (안정)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro (고성능)</option>
       </select>
       <button onclick="saveAiKey()" style="padding:8px 16px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
       <button onclick="clearAiKey()" style="padding:8px 12px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;cursor:pointer">초기화</button>
     </div>
-    <div id="ai-key-status" style="font-size:11px;color:var(--t3);margin-top:6px">API 키를 입력하고 저장하세요. 키는 이 기기에만 로컬 저장됩니다.</div>
+    <div id="ai-key-status" style="font-size:11px;color:var(--t3);margin-top:6px">
+      API 키를 입력하고 저장하세요. 키는 이 기기에만 로컬 저장됩니다. &nbsp;·&nbsp;
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#1a56db">Google AI Studio에서 무료 키 발급 →</a>
+    </div>
   </div>
 
   <!-- 빠른 질문 버튼 -->
@@ -584,7 +588,7 @@ document.addEventListener('keydown',e=>{
     <button id="ai-send-btn" onclick="sendAiMsg()" style="padding:10px 20px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;min-width:60px">전송</button>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-    <span style="font-size:11px;color:var(--t3)">※ API 사용 비용은 Anthropic 계정에서 발생합니다</span>
+    <span style="font-size:11px;color:var(--t3)">※ Gemini 무료 티어: 분당 15회·일 1,500회 한도</span>
     <button onclick="clearAiChat()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">대화 초기화</button>
   </div>
 </div>
@@ -1405,43 +1409,38 @@ async function sendAiMsg(){
   if(!msg)return;
   const key=localStorage.getItem('hpaik_ai_key');
   if(!key){
-    appendAiMsg('ai-err','⚠️ API 키가 설정되지 않았습니다. 위의 설정 영역에서 Anthropic API 키를 입력하고 저장해 주세요.');
+    appendAiMsg('ai-err','⚠️ API 키가 설정되지 않았습니다. 위의 설정 영역에서 Google Gemini API 키를 입력하고 저장해 주세요.');
     return;
   }
   input.value='';
   appendAiMsg('ai-user',msg);
-  aiHistory.push({role:'user',content:msg});
+  aiHistory.push({role:'user',parts:[{text:msg}]});
   const btn=document.getElementById('ai-send-btn');
   btn.disabled=true; btn.textContent='⏳';
   const loadingEl=appendAiMsg('ai-bot','<span style="color:var(--t3)">답변 생성 중…</span>');
   try{
-    const model=localStorage.getItem('hpaik_ai_model')||'claude-haiku-4-5-20251001';
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const model=localStorage.getItem('hpaik_ai_model')||'gemini-2.0-flash';
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
       method:'POST',
-      headers:{
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'content-type':'application/json',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
+      headers:{'content-type':'application/json'},
       body:JSON.stringify({
-        model,
-        max_tokens:2048,
-        system:getSystemPrompt(),
-        messages:aiHistory
+        system_instruction:{parts:[{text:getSystemPrompt()}]},
+        contents:aiHistory
       })
     });
-    if(!res.ok){
-      const err=await res.json().catch(()=>({}));
-      throw new Error(err.error?.message||`HTTP ${res.status}`);
-    }
     const data=await res.json();
-    const reply=data.content?.[0]?.text||'(응답 없음)';
-    aiHistory.push({role:'assistant',content:reply});
+    if(!res.ok){
+      const msg=data.error?.message||`HTTP ${res.status}`;
+      const detail=data.error?.status||'';
+      throw new Error(`${msg}${detail?' ('+detail+')':''}`);
+    }
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'(응답 없음)';
+    aiHistory.push({role:'model',parts:[{text:reply}]});
     loadingEl.innerHTML=formatAiReply(reply);
   }catch(e){
     loadingEl.className='ai-msg ai-err';
-    loadingEl.textContent='❌ 오류: '+e.message;
+    loadingEl.innerHTML='❌ 오류: '+e.message+'<br><span style="font-size:11px;color:#b91c1c">위 오류 메시지를 캡처해서 담당자에게 전달하세요</span>';
+    aiHistory.pop();
   }finally{
     btn.disabled=false; btn.textContent='전송';
   }
