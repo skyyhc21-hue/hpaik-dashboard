@@ -286,6 +286,8 @@ document.addEventListener('keydown',e=>{
   <button class="tab" onclick="sw(4,this)">✏️ 메모</button>
   <button class="tab" onclick="sw(5,this)">💊 수가조회</button>
   <button class="tab" onclick="sw(6,this)">🤖 AI비서</button>
+  <button class="tab" onclick="sw(7,this)">📝 면담이력</button>
+  <button class="tab" onclick="sw(8,this)">🎯 영입파이프라인</button>
 </nav>
 
 <!-- ═══════════════════════════════════ TAB 0: 개요 ═══ -->
@@ -584,6 +586,185 @@ document.addEventListener('keydown',e=>{
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
     <span style="font-size:11px;color:var(--t3)">※ API 사용 비용은 Anthropic 계정에서 발생합니다</span>
     <button onclick="clearAiChat()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">대화 초기화</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ TAB 7: 면담이력 ═══ -->
+<div id="p7" class="pane">
+  <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between">
+    <div class="sec-title">교원 면담 이력</div>
+    <button onclick="openInterviewModal()" style="padding:7px 16px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">+ 면담 기록</button>
+  </div>
+
+  <!-- 필터 -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="fpill on" onclick="setIvFilter('all',this)">전체</button>
+    <button class="fpill" onclick="setIvFilter('재계약',this)">재계약</button>
+    <button class="fpill" onclick="setIvFilter('성과',this)">성과</button>
+    <button class="fpill" onclick="setIvFilter('영입',this)">영입</button>
+    <button class="fpill" onclick="setIvFilter('일반',this)">일반</button>
+  </div>
+  <div class="search-wrap" style="margin-bottom:10px">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="iv-srch" placeholder="교원명·진료과·내용 검색…" oninput="renderInterviews()">
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>날짜</th><th>성명</th><th>진료과</th><th>직위</th>
+        <th>유형</th><th>면담 내용</th><th>후속 조치</th><th></th>
+      </tr></thead>
+      <tbody id="iv-body"></tbody>
+    </table>
+  </div>
+  <p id="iv-empty" style="text-align:center;color:var(--t3);padding:32px;display:none">면담 이력이 없습니다. 위 버튼으로 추가하세요.</p>
+</div>
+
+<!-- 면담 모달 -->
+<div id="iv-modal" style="display:none;position:fixed;inset:0;background:#00000066;z-index:999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:12px;padding:24px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px #0003">
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--t1)" id="iv-modal-title">면담 기록 추가</div>
+    <input type="hidden" id="iv-edit-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">날짜 *</label>
+        <input type="date" id="iv-date" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">유형 *</label>
+        <select id="iv-type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+          <option>재계약</option><option>성과</option><option>영입</option><option>일반</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">성명 *</label>
+        <input type="text" id="iv-name" placeholder="홍길동" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">진료과</label>
+        <input type="text" id="iv-dept" placeholder="외과" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">직위</label>
+        <input type="text" id="iv-pos" placeholder="진료교수" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">면담자</label>
+        <input type="text" id="iv-interviewer" placeholder="담당자명" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">면담 내용 *</label>
+      <textarea id="iv-content" rows="4" placeholder="면담 내용을 상세히 기록하세요…" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;background:var(--card);color:var(--t1);font-family:inherit;line-height:1.5;box-sizing:border-box"></textarea>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">후속 조치 / 특이사항</label>
+      <textarea id="iv-action" rows="2" placeholder="후속 조치 또는 특이사항…" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;background:var(--card);color:var(--t1);font-family:inherit;line-height:1.5;box-sizing:border-box"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeInterviewModal()" style="padding:9px 18px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px;cursor:pointer;color:var(--t2)">취소</button>
+      <button onclick="saveInterview()" style="padding:9px 20px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ TAB 8: 영입파이프라인 ═══ -->
+<div id="p8" class="pane">
+  <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between">
+    <div class="sec-title">영입 파이프라인</div>
+    <button onclick="openPipelineModal()" style="padding:7px 16px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">+ 후보자 등록</button>
+  </div>
+
+  <!-- 단계별 카운트 -->
+  <div id="pipeline-summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+
+  <!-- 필터 -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="fpill on" onclick="setPlFilter('all',this)">전체</button>
+    <button class="fpill" onclick="setPlFilter('검토중',this)">검토중</button>
+    <button class="fpill" onclick="setPlFilter('접촉',this)">접촉</button>
+    <button class="fpill" onclick="setPlFilter('면담',this)">면담</button>
+    <button class="fpill" onclick="setPlFilter('제안',this)">제안</button>
+    <button class="fpill" onclick="setPlFilter('협상',this)">협상</button>
+    <button class="fpill" onclick="setPlFilter('확정',this)">확정</button>
+    <button class="fpill" onclick="setPlFilter('보류',this)">보류</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>전문과목</th><th>성명</th><th>현 소속</th><th>직위</th>
+        <th>영입 단계</th><th>접촉일</th><th>목표 입사일</th><th>비고</th><th></th>
+      </tr></thead>
+      <tbody id="pl-body"></tbody>
+    </table>
+  </div>
+  <p id="pl-empty" style="text-align:center;color:var(--t3);padding:32px;display:none">등록된 후보자가 없습니다. 위 버튼으로 추가하세요.</p>
+  <div style="margin-top:14px">
+    <div class="sec-title" style="font-size:13px;margin-bottom:8px">📌 확정 영입자</div>
+    <div class="chart-card" style="padding:12px">
+      <div class="chg-item">
+        <span class="badge b-green">확정</span>
+        <div style="margin-left:8px">
+          <strong>김현수</strong> · 심장혈관흉부외과 · 진료교수
+          <span style="font-size:12px;color:var(--t3);margin-left:8px">입사 예정 2026.09.01 · 고정 3,000만원/월 + 가산금</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 영입 모달 -->
+<div id="pl-modal" style="display:none;position:fixed;inset:0;background:#00000066;z-index:999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:12px;padding:24px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px #0003">
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--t1)" id="pl-modal-title">후보자 등록</div>
+    <input type="hidden" id="pl-edit-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">전문과목 *</label>
+        <input type="text" id="pl-dept" placeholder="심장혈관흉부외과" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">성명</label>
+        <input type="text" id="pl-name" placeholder="홍길동 (미정시 공란)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">현 소속</label>
+        <input type="text" id="pl-org" placeholder="△△병원" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">직위</label>
+        <input type="text" id="pl-pos" placeholder="부교수 / 진료교수" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">영입 단계 *</label>
+        <select id="pl-stage" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+          <option>검토중</option><option>접촉</option><option>면담</option>
+          <option>제안</option><option>협상</option><option>확정</option><option>보류</option><option>철회</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">접촉일</label>
+        <input type="date" id="pl-contact" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">목표 입사일</label>
+        <input type="date" id="pl-start" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">예상 급여 수준</label>
+        <input type="text" id="pl-salary" placeholder="예: 월 2천만원 고정" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--t1)">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">비고 / 특이사항</label>
+      <textarea id="pl-note" rows="3" placeholder="영입 배경, 특기사항, 협의 내용…" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;resize:vertical;background:var(--card);color:var(--t1);font-family:inherit;line-height:1.5;box-sizing:border-box"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closePipelineModal()" style="padding:9px 18px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px;cursor:pointer;color:var(--t2)">취소</button>
+      <button onclick="savePipeline()" style="padding:9px 20px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
+    </div>
   </div>
 </div>
 
@@ -1284,6 +1465,232 @@ function formatAiReply(text){
     .replace(/\n/g,'<br>');
 }
 
+// ══════════════════════════════════════════════════════════════
+// ── 면담이력 ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+function loadInterviews(){ try{return JSON.parse(localStorage.getItem('hpaik_interviews')||'[]');}catch(e){return[];} }
+function saveInterviews(arr){ localStorage.setItem('hpaik_interviews',JSON.stringify(arr)); }
+
+const IV_TYPE_CLR = {'재계약':'#1a56db','성과':'#059669','영입':'#7c3aed','일반':'#64748b'};
+let curIvFilter = 'all';
+
+function setIvFilter(f,el){
+  curIvFilter=f;
+  document.querySelectorAll('#p7 .fpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderInterviews();
+}
+
+function renderInterviews(){
+  const q=(document.getElementById('iv-srch').value||'').toLowerCase();
+  const all=loadInterviews();
+  const rows=all.filter(d=>{
+    const mf=curIvFilter==='all'||d.type===curIvFilter;
+    const mq=!q||d.name.includes(q)||d.dept.includes(q)||d.content.includes(q)||d.action.includes(q);
+    return mf&&mq;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+  const empty=document.getElementById('iv-empty');
+  if(!rows.length){empty.style.display='block';document.getElementById('iv-body').innerHTML='';return;}
+  empty.style.display='none';
+  document.getElementById('iv-body').innerHTML=rows.map(d=>`
+    <tr>
+      <td style="white-space:nowrap;font-size:12px;color:var(--t2)">${d.date}</td>
+      <td class="name">${d.name}</td>
+      <td style="font-size:12px;color:var(--t2)">${d.dept||'-'}</td>
+      <td style="font-size:11px;color:var(--t2)">${d.pos||'-'}</td>
+      <td><span class="badge" style="background:${IV_TYPE_CLR[d.type]||'#94a3b8'}20;color:${IV_TYPE_CLR[d.type]||'#94a3b8'};border:1px solid ${IV_TYPE_CLR[d.type]||'#94a3b8'}40;font-size:10px">${d.type}</span></td>
+      <td style="font-size:12px;max-width:220px;white-space:pre-wrap;line-height:1.4">${esc(d.content)}</td>
+      <td style="font-size:12px;color:var(--t2);max-width:140px;white-space:pre-wrap">${esc(d.action||'-')}</td>
+      <td style="white-space:nowrap">
+        <button onclick="editInterview('${d.id}')" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;color:var(--t2);margin-right:4px">수정</button>
+        <button onclick="deleteInterview('${d.id}')" style="font-size:11px;padding:3px 8px;border:1px solid #fecaca;border-radius:4px;background:#fef2f2;cursor:pointer;color:#dc2626">삭제</button>
+      </td>
+    </tr>`).join('');
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function openInterviewModal(reset=true){
+  if(reset){
+    document.getElementById('iv-modal-title').textContent='면담 기록 추가';
+    document.getElementById('iv-edit-id').value='';
+    document.getElementById('iv-date').value=new Date().toISOString().slice(0,10);
+    ['iv-type','iv-name','iv-dept','iv-pos','iv-interviewer','iv-content','iv-action'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el.tagName==='SELECT') el.value=el.options[0].value; else el.value='';
+    });
+  }
+  document.getElementById('iv-modal').style.display='flex';
+}
+function closeInterviewModal(){ document.getElementById('iv-modal').style.display='none'; }
+
+function saveInterview(){
+  const name=document.getElementById('iv-name').value.trim();
+  const content=document.getElementById('iv-content').value.trim();
+  const date=document.getElementById('iv-date').value;
+  if(!name||!content||!date){alert('날짜, 성명, 면담 내용은 필수입니다.');return;}
+  const all=loadInterviews();
+  const editId=document.getElementById('iv-edit-id').value;
+  const rec={
+    id:editId||Date.now().toString(),
+    date,name,
+    dept:document.getElementById('iv-dept').value.trim(),
+    pos:document.getElementById('iv-pos').value.trim(),
+    type:document.getElementById('iv-type').value,
+    interviewer:document.getElementById('iv-interviewer').value.trim(),
+    content:document.getElementById('iv-content').value.trim(),
+    action:document.getElementById('iv-action').value.trim(),
+  };
+  if(editId){ const idx=all.findIndex(d=>d.id===editId); if(idx>-1) all[idx]=rec; }
+  else all.push(rec);
+  saveInterviews(all);
+  closeInterviewModal();
+  renderInterviews();
+}
+
+function editInterview(id){
+  const rec=loadInterviews().find(d=>d.id===id);
+  if(!rec)return;
+  document.getElementById('iv-modal-title').textContent='면담 기록 수정';
+  document.getElementById('iv-edit-id').value=id;
+  document.getElementById('iv-date').value=rec.date;
+  document.getElementById('iv-type').value=rec.type;
+  document.getElementById('iv-name').value=rec.name;
+  document.getElementById('iv-dept').value=rec.dept||'';
+  document.getElementById('iv-pos').value=rec.pos||'';
+  document.getElementById('iv-interviewer').value=rec.interviewer||'';
+  document.getElementById('iv-content').value=rec.content;
+  document.getElementById('iv-action').value=rec.action||'';
+  openInterviewModal(false);
+}
+
+function deleteInterview(id){
+  if(!confirm('이 면담 기록을 삭제할까요?'))return;
+  saveInterviews(loadInterviews().filter(d=>d.id!==id));
+  renderInterviews();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── 영입파이프라인 ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+function loadPipeline(){ try{return JSON.parse(localStorage.getItem('hpaik_pipeline')||'[]');}catch(e){return[];} }
+function savePipeline2(arr){ localStorage.setItem('hpaik_pipeline',JSON.stringify(arr)); }
+
+const PL_STAGE_CLR = {
+  '검토중':'#64748b','접촉':'#0891b2','면담':'#7c3aed','제안':'#d97706',
+  '협상':'#ea580c','확정':'#059669','보류':'#94a3b8','철회':'#dc2626'
+};
+let curPlFilter = 'all';
+
+function setPlFilter(f,el){
+  curPlFilter=f;
+  document.querySelectorAll('#p8 .fpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderPipeline();
+}
+
+function renderPipeline(){
+  const all=loadPipeline();
+  // 단계별 요약
+  const stages=['검토중','접촉','면담','제안','협상','확정','보류'];
+  document.getElementById('pipeline-summary').innerHTML=stages.map(s=>{
+    const cnt=all.filter(d=>d.stage===s).length;
+    if(!cnt)return'';
+    return `<span style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid ${PL_STAGE_CLR[s]}40;background:${PL_STAGE_CLR[s]}15;font-size:12px;font-weight:600;color:${PL_STAGE_CLR[s]}">${s} <span style="background:${PL_STAGE_CLR[s]};color:#fff;border-radius:99px;padding:0 6px;font-size:11px">${cnt}</span></span>`;
+  }).join('');
+
+  const rows=all.filter(d=>curPlFilter==='all'||d.stage===curPlFilter)
+    .sort((a,b)=>{
+      const ord=['협상','제안','면담','접촉','검토중','확정','보류','철회'];
+      return (ord.indexOf(a.stage)||9)-(ord.indexOf(b.stage)||9);
+    });
+  const empty=document.getElementById('pl-empty');
+  if(!rows.length){empty.style.display='block';document.getElementById('pl-body').innerHTML='';return;}
+  empty.style.display='none';
+  const today=new Date();
+  document.getElementById('pl-body').innerHTML=rows.map(d=>{
+    const dday=d.start?Math.ceil((new Date(d.start)-today)/86400000):null;
+    const ddayStr=dday!=null?`<br><span style="font-size:10px;color:${dday<60?'#dc2626':'var(--t3)'}">D-${dday}</span>`:'';
+    return `<tr>
+      <td style="font-weight:600">${esc(d.dept)}</td>
+      <td class="name">${esc(d.name||'미정')}</td>
+      <td style="font-size:12px;color:var(--t2)">${esc(d.org||'-')}</td>
+      <td style="font-size:11px;color:var(--t2)">${esc(d.pos||'-')}</td>
+      <td><span class="badge" style="background:${PL_STAGE_CLR[d.stage]||'#94a3b8'}20;color:${PL_STAGE_CLR[d.stage]||'#94a3b8'};border:1px solid ${PL_STAGE_CLR[d.stage]||'#94a3b8'}40;font-size:11px;font-weight:700">${d.stage}</span></td>
+      <td style="font-size:12px;color:var(--t2)">${d.contact||'-'}</td>
+      <td style="font-size:12px">${d.start||'-'}${ddayStr}</td>
+      <td style="font-size:12px;color:var(--t2);max-width:160px">${esc(d.note||'-')}</td>
+      <td style="white-space:nowrap">
+        <button onclick="editPipeline('${d.id}')" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;color:var(--t2);margin-right:4px">수정</button>
+        <button onclick="deletePipeline('${d.id}')" style="font-size:11px;padding:3px 8px;border:1px solid #fecaca;border-radius:4px;background:#fef2f2;cursor:pointer;color:#dc2626">삭제</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openPipelineModal(reset=true){
+  if(reset){
+    document.getElementById('pl-modal-title').textContent='후보자 등록';
+    document.getElementById('pl-edit-id').value='';
+    ['pl-dept','pl-name','pl-org','pl-pos','pl-contact','pl-start','pl-salary','pl-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pl-stage').value='검토중';
+    document.getElementById('pl-contact').value=new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('pl-modal').style.display='flex';
+}
+function closePipelineModal(){ document.getElementById('pl-modal').style.display='none'; }
+
+function savePipeline(){
+  const dept=document.getElementById('pl-dept').value.trim();
+  if(!dept){alert('전문과목은 필수입니다.');return;}
+  const all=loadPipeline();
+  const editId=document.getElementById('pl-edit-id').value;
+  const rec={
+    id:editId||Date.now().toString(),
+    dept,
+    name:document.getElementById('pl-name').value.trim(),
+    org:document.getElementById('pl-org').value.trim(),
+    pos:document.getElementById('pl-pos').value.trim(),
+    stage:document.getElementById('pl-stage').value,
+    contact:document.getElementById('pl-contact').value,
+    start:document.getElementById('pl-start').value,
+    salary:document.getElementById('pl-salary').value.trim(),
+    note:document.getElementById('pl-note').value.trim(),
+  };
+  if(editId){ const idx=all.findIndex(d=>d.id===editId); if(idx>-1) all[idx]=rec; }
+  else all.push(rec);
+  savePipeline2(all);
+  closePipelineModal();
+  renderPipeline();
+}
+
+function editPipeline(id){
+  const rec=loadPipeline().find(d=>d.id===id);
+  if(!rec)return;
+  document.getElementById('pl-modal-title').textContent='후보자 수정';
+  document.getElementById('pl-edit-id').value=id;
+  document.getElementById('pl-dept').value=rec.dept||'';
+  document.getElementById('pl-name').value=rec.name||'';
+  document.getElementById('pl-org').value=rec.org||'';
+  document.getElementById('pl-pos').value=rec.pos||'';
+  document.getElementById('pl-stage').value=rec.stage||'검토중';
+  document.getElementById('pl-contact').value=rec.contact||'';
+  document.getElementById('pl-start').value=rec.start||'';
+  document.getElementById('pl-salary').value=rec.salary||'';
+  document.getElementById('pl-note').value=rec.note||'';
+  openPipelineModal(false);
+}
+
+function deletePipeline(id){
+  if(!confirm('이 후보자를 삭제할까요?'))return;
+  savePipeline2(loadPipeline().filter(d=>d.id!==id));
+  renderPipeline();
+}
+
+// 모달 바깥 클릭 시 닫기
+document.getElementById('iv-modal').addEventListener('click',function(e){if(e.target===this)closeInterviewModal();});
+document.getElementById('pl-modal').addEventListener('click',function(e){if(e.target===this)closePipelineModal();});
+
 // ── INIT ────────────────────────────────────────────────────────
 document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
 try{const m=localStorage.getItem('hpaik_memo');if(m)document.getElementById('memo').value=m;}catch(e){}
@@ -1306,6 +1713,8 @@ renderContract();
 initDdayChart();
 renderResearch();
 renderFeeTable();
+renderInterviews();
+renderPipeline();
 </script>
 </body>
 </html>
