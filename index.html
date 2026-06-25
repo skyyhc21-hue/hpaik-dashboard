@@ -1428,8 +1428,11 @@ async function sendAiMsg(){
       method:'POST',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({
-        system_instruction:{parts:[{text:getSystemPrompt()}]},
-        contents:aiHistory
+        contents:[
+          {role:'user',parts:[{text:'[시스템 지침]\n'+getSystemPrompt()+'\n\n[사용자 첫 메시지 시작]'}]},
+          {role:'model',parts:[{text:'네, 해운대백병원 인재경영 AI 비서입니다. 무엇을 도와드릴까요?'}]},
+          ...aiHistory
+        ]
       })
     });
     const data=await res.json();
