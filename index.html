@@ -269,6 +269,7 @@ document.addEventListener('keydown',e=>{
     <h1>해운대백병원 <span>교원인력 Intelligence</span></h1>
   </div>
   <div class="hdr-right">
+    <span id="gist-status" style="font-size:11px;color:#94a3b8;cursor:pointer" onclick="syncFromGist()" title="클릭하면 수동 동기화">☁️ 동기화 중…</span>
     <span class="hdr-date" id="hdr-date"></span>
     <select class="hdr-sel" onchange="setMonth(this.value)">
       <option value="2604">2026. 04</option>
@@ -548,6 +549,17 @@ document.addEventListener('keydown',e=>{
   <div class="sec-hdr"><div class="sec-title">🤖 인재경영 AI 비서</div></div>
 
   <!-- API 설정 -->
+  <!-- GitHub 동기화 설정 -->
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:8px">☁️ 클라우드 저장 설정 <span style="font-size:11px;font-weight:400;color:#059669;background:#ecfdf5;padding:2px 7px;border-radius:10px;margin-left:4px">GitHub Gist</span></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="password" id="gist-token-input" placeholder="GitHub 토큰 (gho_...)" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff">
+      <button onclick="saveGistToken()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
+      <button onclick="syncFromGist()" style="padding:8px 12px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;cursor:pointer">수동동기화</button>
+    </div>
+    <div id="gist-token-status" style="font-size:11px;color:var(--t3);margin-top:6px">GitHub 토큰을 입력하면 면담이력·파이프라인·메모·AI대화가 클라우드에 자동 저장됩니다.</div>
+  </div>
+
   <div id="ai-setup" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px">
     <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:8px">⚙️ Google Gemini API 설정 <span style="font-size:11px;font-weight:400;color:#059669;background:#ecfdf5;padding:2px 7px;border-radius:10px;margin-left:4px">무료</span></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1193,6 +1205,7 @@ function sw(n,el){
 
 function saveMemo(){
   localStorage.setItem('hpaik_memo',document.getElementById('memo').value);
+  syncToGist();
   alert('저장되었습니다.');
 }
 
@@ -1330,6 +1343,70 @@ function renderFeeTable(){
 // ══════════════════════════════════════════════════════════════
 let aiHistory = [];
 
+// ── GIST 동기화 ──────────────────────────────────────────
+const GIST_ID = '3a4a2e923dbd4648cf678ae9090cdedf';
+const GIST_FILE = 'hpaik_data.json';
+function getGistToken(){ return localStorage.getItem('hpaik_gist_token')||''; }
+
+function saveGistToken(){
+  const t=document.getElementById('gist-token-input').value.trim();
+  if(!t){alert('토큰을 입력하세요.');return;}
+  localStorage.setItem('hpaik_gist_token',t);
+  document.getElementById('gist-token-input').value='';
+  document.getElementById('gist-token-status').textContent='✅ 토큰 저장됨. 동기화를 시작합니다…';
+  document.getElementById('gist-token-status').style.color='#059669';
+  syncFromGist();
+}
+
+async function gistLoad(){
+  try{
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      headers:{'Authorization':'token '+getGistToken(),'Accept':'application/vnd.github.v3+json'}
+    });
+    if(!res.ok) return null;
+    const data = await res.json();
+    const raw = data.files[GIST_FILE]?.content;
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+async function gistSave(obj){
+  try{
+    await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      method:'PATCH',
+      headers:{'Authorization':'token '+getGistToken(),'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body: JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify({...obj,updated:new Date().toISOString()})}}})
+    });
+  }catch(e){}
+}
+
+async function syncFromGist(){
+  const el = document.getElementById('gist-status');
+  if(el) el.textContent = '☁️ 동기화 중…';
+  const data = await gistLoad();
+  if(!data){ if(el) el.textContent = '⚠️ 오프라인 (로컬 사용 중)'; return; }
+  if(data.interviews?.length) localStorage.setItem('hpaik_interviews', JSON.stringify(data.interviews));
+  if(data.pipeline?.length) localStorage.setItem('hpaik_pipeline', JSON.stringify(data.pipeline));
+  if(data.memo) localStorage.setItem('hpaik_memo', data.memo);
+  if(data.ai_history?.length) aiHistory = data.ai_history;
+  renderInterviews(); renderPipeline();
+  const memo = document.getElementById('memo-text');
+  if(memo) memo.value = data.memo||'';
+  if(el) el.textContent = '✅ 동기화 완료 ('+(data.updated||'').slice(0,10)+')';
+}
+
+async function syncToGist(){
+  const obj = {
+    interviews: JSON.parse(localStorage.getItem('hpaik_interviews')||'[]'),
+    pipeline: JSON.parse(localStorage.getItem('hpaik_pipeline')||'[]'),
+    memo: localStorage.getItem('hpaik_memo')||'',
+    ai_history: aiHistory.slice(-50)
+  };
+  await gistSave(obj);
+  const el = document.getElementById('gist-status');
+  if(el) el.textContent = '✅ 저장 완료 ('+new Date().toLocaleDateString('ko-KR')+')';
+}
+
 function saveAiKey(){
   const key=document.getElementById('ai-key').value.trim();
   const model=document.getElementById('ai-model').value;
@@ -1438,6 +1515,7 @@ async function sendAiMsg(){
     const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'(응답 없음)';
     aiHistory.push({role:'model',parts:[{text:reply}]});
     loadingEl.innerHTML=formatAiReply(reply);
+    syncToGist();
   }catch(e){
     loadingEl.className='ai-msg ai-err';
     loadingEl.innerHTML='❌ 오류: '+e.message+'<br><span style="font-size:11px;color:#b91c1c">위 오류 메시지를 캡처해서 담당자에게 전달하세요</span>';
@@ -1469,7 +1547,7 @@ function formatAiReply(text){
 // ── 면담이력 ──────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
 function loadInterviews(){ try{return JSON.parse(localStorage.getItem('hpaik_interviews')||'[]');}catch(e){return[];} }
-function saveInterviews(arr){ localStorage.setItem('hpaik_interviews',JSON.stringify(arr)); }
+function saveInterviews(arr){ localStorage.setItem('hpaik_interviews',JSON.stringify(arr)); syncToGist(); }
 
 const IV_TYPE_CLR = {'재계약':'#1a56db','성과':'#059669','영입':'#7c3aed','일반':'#64748b'};
 let curIvFilter = 'all';
@@ -1574,7 +1652,7 @@ function deleteInterview(id){
 // ── 영입파이프라인 ──────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
 function loadPipeline(){ try{return JSON.parse(localStorage.getItem('hpaik_pipeline')||'[]');}catch(e){return[];} }
-function savePipeline2(arr){ localStorage.setItem('hpaik_pipeline',JSON.stringify(arr)); }
+function savePipeline2(arr){ localStorage.setItem('hpaik_pipeline',JSON.stringify(arr)); syncToGist(); }
 
 const PL_STAGE_CLR = {
   '검토중':'#64748b','접촉':'#0891b2','면담':'#7c3aed','제안':'#d97706',
@@ -1715,6 +1793,7 @@ renderResearch();
 renderFeeTable();
 renderInterviews();
 renderPipeline();
+syncFromGist();
 </script>
 </body>
 </html>
