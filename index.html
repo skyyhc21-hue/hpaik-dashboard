@@ -590,9 +590,26 @@ document.addEventListener('keydown',e=>{
     <div class="ai-msg ai-sys">안녕하세요! 해운대백병원 인재경영 AI 비서입니다.<br>교원 실적 분석, 재계약 전략, 수가 해석 등을 도와드립니다.<br>위 빠른 질문을 클릭하거나 직접 입력해 주세요. 🏥</div>
   </div>
 
+  <!-- 음성 컨트롤 -->
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+    <button id="voice-btn" onclick="toggleVoiceInput()" style="display:flex;align-items:center;gap:6px;padding:10px 18px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600">
+      🎤 <span id="voice-btn-txt">음성 입력</span>
+    </button>
+    <button id="tts-toggle" onclick="toggleTts()" style="display:flex;align-items:center;gap:6px;padding:10px 14px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;cursor:pointer">
+      🔊 <span id="tts-txt">음성 읽기 OFF</span>
+    </button>
+    <select id="tts-speed" style="padding:8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;background:#fff">
+      <option value="0.8">느리게</option>
+      <option value="1.0" selected>보통</option>
+      <option value="1.3">빠르게</option>
+      <option value="1.6">매우 빠르게</option>
+    </select>
+    <button onclick="stopTts()" style="padding:8px 12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:12px;cursor:pointer">⏹ 정지</button>
+  </div>
+
   <!-- 입력창 -->
   <div style="display:flex;gap:8px">
-    <textarea id="ai-input" placeholder="질문을 입력하세요… (Shift+Enter: 줄바꿈, Enter: 전송)" rows="2"
+    <textarea id="ai-input" placeholder="질문을 입력하거나 🎤 음성 입력을 누르세요 (Enter: 전송)" rows="2"
       style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;resize:none;font-family:inherit;line-height:1.5"
       onkeydown="aiKeydown(event)"></textarea>
     <button id="ai-send-btn" onclick="sendAiMsg()" style="padding:10px 20px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700;min-width:60px">전송</button>
@@ -1342,6 +1359,75 @@ function renderFeeTable(){
 // ── AI 비서 ──────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════
 let aiHistory = [];
+let ttsEnabled = false;
+let recognition = null;
+let isListening = false;
+
+// ── 음성 입력 (STT) ──────────────────────────────────────────
+function toggleVoiceInput(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    alert('이 브라우저는 음성 입력을 지원하지 않습니다.\nChrome 또는 모바일 Chrome을 사용해주세요.');
+    return;
+  }
+  if(isListening){ stopVoiceInput(); return; }
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.onstart = ()=>{
+    isListening = true;
+    document.getElementById('voice-btn').style.background='#dc2626';
+    document.getElementById('voice-btn-txt').textContent='듣는 중… (탭하면 중지)';
+  };
+  recognition.onresult = (e)=>{
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('ai-input').value = transcript;
+    if(e.results[e.results.length-1].isFinal){
+      stopVoiceInput();
+      setTimeout(()=>sendAiMsg(), 300);
+    }
+  };
+  recognition.onerror = ()=>stopVoiceInput();
+  recognition.onend = ()=>stopVoiceInput();
+  recognition.start();
+}
+
+function stopVoiceInput(){
+  isListening = false;
+  if(recognition){ try{recognition.stop();}catch(e){} recognition=null; }
+  const btn = document.getElementById('voice-btn');
+  if(btn){ btn.style.background='#1a56db'; document.getElementById('voice-btn-txt').textContent='음성 입력'; }
+}
+
+// ── 음성 출력 (TTS) ──────────────────────────────────────────
+function toggleTts(){
+  ttsEnabled = !ttsEnabled;
+  const el = document.getElementById('tts-txt');
+  const btn = document.getElementById('tts-toggle');
+  if(ttsEnabled){
+    el.textContent='음성 읽기 ON';
+    btn.style.background='#eff4ff'; btn.style.color='#1a56db'; btn.style.borderColor='#93c5fd';
+  } else {
+    el.textContent='음성 읽기 OFF';
+    btn.style.background='#f1f5f9'; btn.style.color='#475569'; btn.style.borderColor='#cbd5e1';
+    stopTts();
+  }
+}
+
+function stopTts(){ window.speechSynthesis.cancel(); }
+
+function speakText(text){
+  if(!ttsEnabled) return;
+  stopTts();
+  // 마크다운 제거 후 읽기
+  const clean = text.replace(/[#*`_~>|\[\]]/g,'').replace(/\n+/g,' ').trim();
+  const utter = new SpeechSynthesisUtterance(clean);
+  utter.lang = 'ko-KR';
+  utter.rate = parseFloat(document.getElementById('tts-speed').value||'1.0');
+  utter.pitch = 1.0;
+  window.speechSynthesis.speak(utter);
+}
 
 // ── GIST 동기화 ──────────────────────────────────────────
 const GIST_ID = '3a4a2e923dbd4648cf678ae9090cdedf';
@@ -1515,6 +1601,7 @@ async function sendAiMsg(){
     const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'(응답 없음)';
     aiHistory.push({role:'model',parts:[{text:reply}]});
     loadingEl.innerHTML=formatAiReply(reply);
+    speakText(reply);
     syncToGist();
   }catch(e){
     loadingEl.className='ai-msg ai-err';
