@@ -280,19 +280,19 @@ document.addEventListener('keydown',e=>{
 
 <!-- TABS -->
 <nav class="tabs">
-  <button class="tab on" onclick="sw(0,this)">📊 개요</button>
-  <button class="tab" onclick="sw(1,this)">📋 실적조회</button>
-  <button class="tab" onclick="sw(2,this)">📅 재계약관리</button>
-  <button class="tab" onclick="sw(3,this)">🔔 인사변동</button>
-  <button class="tab" onclick="sw(4,this)">✏️ 메모</button>
-  <button class="tab" onclick="sw(5,this)">💊 수가조회</button>
-  <button class="tab" onclick="sw(6,this)">🤖 AI비서</button>
-  <button class="tab" onclick="sw(7,this)">📝 면담이력</button>
-  <button class="tab" onclick="sw(8,this)">🎯 영입파이프라인</button>
+  <button class="tab on" data-pane="p6" onclick="sw(this)">🤖 AI비서</button>
+  <button class="tab" data-pane="p0" onclick="sw(this)">📊 개요</button>
+  <button class="tab" data-pane="p1" onclick="sw(this)">📋 실적조회</button>
+  <button class="tab" data-pane="p2" onclick="sw(this)">📅 재계약관리</button>
+  <button class="tab" data-pane="p3" onclick="sw(this)">🔔 인사변동</button>
+  <button class="tab" data-pane="p4" onclick="sw(this)">✏️ 메모</button>
+  <button class="tab" data-pane="p5" onclick="sw(this)">💊 수가조회</button>
+  <button class="tab" data-pane="p7" onclick="sw(this)">📝 면담이력</button>
+  <button class="tab" data-pane="p8" onclick="sw(this)">🎯 영입파이프라인</button>
 </nav>
 
 <!-- ═══════════════════════════════════ TAB 0: 개요 ═══ -->
-<div id="p0" class="pane on">
+<div id="p0" class="pane">
 
   <div class="grid4">
     <div class="kpi" style="--accent:#1a56db">
@@ -306,9 +306,9 @@ document.addEventListener('keydown',e=>{
       <div class="kpi-sub">임상강사 6 · 진료교수 86 · 계약제 6+</div>
     </div>
     <div class="kpi" style="--accent:#059669">
-      <div class="kpi-label">병원 의료수익 (5월)</div>
-      <div class="kpi-val">390<span>억</span></div>
-      <div class="kpi-sub">경상이익 -4.6억 · 인건비율 49.1%</div>
+      <div class="kpi-label">학년도 누적 의료수익 (3~5월)</div>
+      <div class="kpi-val">1,170<span>억</span></div>
+      <div class="kpi-sub">월평균 390억 · 26학년도 3개월 경과</div>
     </div>
     <div class="kpi" style="--accent:#dc2626">
       <div class="kpi-label">재계약 만료임박</div>
@@ -340,6 +340,55 @@ document.addEventListener('keydown',e=>{
       <div class="kpi-sub">재원 3,116명/일 · 허가 3,835병상</div>
     </div>
   </div>
+
+  <!-- 학년도 병원 실적 비교 (3월~2월) -->
+  <div class="sec-hdr"><div class="sec-title">학년도 병원 실적 비교</div><div class="sec-note">학년도 기준: 3월 ~ 익년 2월</div></div>
+  <div class="tbl-wrap" style="margin-bottom:8px">
+    <table>
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th class="num">24학년도<br><span style="font-weight:400;color:var(--t3)">연누적</span></th>
+          <th class="num">24학년도<br><span style="font-weight:400;color:var(--t3)">월평균</span></th>
+          <th class="num">25학년도<br><span style="font-weight:400;color:var(--t3)">연누적</span></th>
+          <th class="num">25학년도<br><span style="font-weight:400;color:var(--t3)">월평균</span></th>
+          <th class="num" style="color:#059669">26학년도<br><span style="font-weight:400">누적(3~5월)</span></th>
+          <th class="num" style="color:#059669">26학년도<br><span style="font-weight:400">당월평균</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">의료수익</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:#059669;font-weight:700">1,170억</td>
+          <td class="num" style="color:#059669;font-weight:700">390억</td>
+        </tr>
+        <tr>
+          <td class="name">경상이익</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:#dc2626;font-weight:700">-13.8억</td>
+          <td class="num" style="color:#dc2626;font-weight:700">-4.6억</td>
+        </tr>
+        <tr>
+          <td class="name">인건비율</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num">49.1%</td>
+          <td class="num">49.1%</td>
+        </tr>
+        <tr>
+          <td class="name">병상가동률</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num" style="color:var(--t3)">-</td><td class="num" style="color:var(--t3)">-</td>
+          <td class="num">-</td>
+          <td class="num">81.2%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:11px;color:var(--t3);margin-bottom:12px;padding:0 2px">※ 24·25학년도는 EDW 자료 입수 후 업데이트 예정 · 26학년도 누적은 3~5월 3개월 기준</p>
 
   <!-- 연구년 알림 -->
   <div style="background:#eff4ff;border:1px solid #bfdbfe;border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;display:flex;gap:8px;align-items:flex-start">
@@ -409,6 +458,29 @@ document.addEventListener('keydown',e=>{
     </table>
   </div>
   <p style="font-size:11px;color:var(--t3);margin-top:8px;padding:0 2px">※ 사번 H0 기준 · 의생명연구원·일반의·지원교원 제외 · <strong>2026년 5월 실적</strong> (PAIK-DR-004, 2026-06-22)</p>
+
+  <!-- 학년도 실적 비교 -->
+  <div class="sec-hdr" style="margin-top:20px">
+    <div class="sec-title">학년도 실적 비교 (총진료금액 기준)</div>
+    <div class="sec-note">학년도: 3월~익년 2월 · 단위: 만원</div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>성명</th><th>진료과</th><th>구분</th>
+          <th class="num">24학년도<br><span style="font-weight:400;color:var(--t3)">월평균</span></th>
+          <th class="num">25학년도<br><span style="font-weight:400;color:var(--t3)">월평균</span></th>
+          <th class="num" style="color:#1a56db">26년도<br><span style="font-weight:400">당월(5월)</span></th>
+          <th class="num" style="color:#059669">26년도<br><span style="font-weight:400">누적(3개월)</span></th>
+          <th class="num" style="color:#059669">26년도<br><span style="font-weight:400">월평균</span></th>
+          <th style="text-align:center">전년대비</th>
+        </tr>
+      </thead>
+      <tbody id="ayear-body"></tbody>
+    </table>
+  </div>
+  <p style="font-size:11px;color:var(--t3);margin-top:8px;padding:0 2px">※ 24·25학년도는 EDW 자료 입수 후 업데이트 예정 · 26년도 누적·평균은 3~5월 3개월 기준(당월 기준 추산) · 진료교수·수익기준 대상</p>
 
 </div>
 
@@ -545,7 +617,7 @@ document.addEventListener('keydown',e=>{
 </div>
 
 <!-- ═══════════════════════════════════ TAB 6: AI비서 ═══ -->
-<div id="p6" class="pane">
+<div id="p6" class="pane on">
   <div class="sec-hdr"><div class="sec-title">🤖 인재경영 AI 비서</div></div>
 
   <!-- API 설정 -->
@@ -1131,6 +1203,33 @@ function renderTable(){
   }).join('');
 }
 
+function renderAYearTable(){
+  const rows = PERF.filter(d=>d.criteria==='수익'||(d.type==='전임'&&!d.criteria));
+  document.getElementById('ayear-body').innerHTML = rows.map(d=>{
+    const cum = d.rev * 3;
+    const avg = d.rev;
+    const p1 = d.prev1||null;
+    const p2 = d.prev2||null;
+    let trendHtml = '<span style="color:var(--t3)">-</span>';
+    if(p1){
+      if(avg>p1*1.05) trendHtml='<span style="color:#059669;font-weight:700">▲</span>';
+      else if(avg<p1*0.95) trendHtml='<span style="color:#dc2626;font-weight:700">▼</span>';
+      else trendHtml='<span style="color:#d97706;font-weight:700">→</span>';
+    }
+    return `<tr>
+      <td class="name">${d.name}</td>
+      <td style="font-size:11px">${d.dept}</td>
+      <td><span class="badge ${d.type==='전임'?'b-blue':'b-purple'}" style="font-size:10px">${d.pos}</span></td>
+      <td class="num" style="color:var(--t3)">${p2 ? p2.toLocaleString() : '-'}</td>
+      <td class="num" style="color:var(--t3)">${p1 ? p1.toLocaleString() : '-'}</td>
+      <td class="num" style="font-weight:600;color:#1a56db">${avg.toLocaleString()}</td>
+      <td class="num" style="font-weight:700;color:#059669">${cum.toLocaleString()}</td>
+      <td class="num">${avg.toLocaleString()}</td>
+      <td style="text-align:center">${trendHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderPerfChart(){
   const q = document.getElementById('srch').value.toLowerCase();
   const rows = PERF.filter(d=>{
@@ -1221,11 +1320,11 @@ function renderResearch(){
 }
 
 // ── TAB SWITCH ──────────────────────────────────────────────────
-function sw(n,el){
+function sw(el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('p'+n).classList.add('on');
+  document.getElementById(el.dataset.pane).classList.add('on');
 }
 
 function saveMemo(){
@@ -1411,7 +1510,8 @@ function stopVoiceInput(){
 // ── 키워드 대기 모드 ("코드") ──────────────────────────────
 let wakeMode = false;
 let wakeRecognition = null;
-const WAKE_WORDS = ['코드','code','cod'];
+let wakeTriggered = false;  // 중복 트리거 방지
+const WAKE_WORDS = ['코드','code','코드야','코드!'];
 
 function toggleWakeMode(){
   if(wakeMode){ stopWakeMode(); return; }
@@ -1426,28 +1526,50 @@ function toggleWakeMode(){
 
 function stopWakeMode(){
   wakeMode = false;
-  if(wakeRecognition){try{wakeRecognition.stop();}catch(e){} wakeRecognition=null;}
+  wakeTriggered = false;
+  if(wakeRecognition){try{wakeRecognition.abort();}catch(e){} wakeRecognition=null;}
   const btn = document.getElementById('wake-btn');
   if(btn){btn.style.background='#475569'; btn.textContent='💤 코드 대기 OFF';}
 }
 
 function startWakeListening(){
   if(!wakeMode) return;
+  if(wakeRecognition){try{wakeRecognition.abort();}catch(e){}}
   const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
   wakeRecognition = new SR();
   wakeRecognition.lang='ko-KR';
-  wakeRecognition.continuous=false;
+  wakeRecognition.continuous=true;   // 끊기지 않고 계속 듣기
   wakeRecognition.interimResults=true;
+  wakeTriggered = false;
   wakeRecognition.onresult=(e)=>{
-    const txt=Array.from(e.results).map(r=>r[0].transcript).join('').toLowerCase().replace(/\s/g,'');
-    if(WAKE_WORDS.some(w=>txt.includes(w.replace(/\s/g,'')))){
+    if(wakeTriggered) return;
+    const results = Array.from(e.results);
+    // 마지막 결과만 체크 (누적 방지)
+    const last = results[results.length-1];
+    const txt = last[0].transcript.toLowerCase().replace(/\s/g,'');
+    if(WAKE_WORDS.some(w=>txt.includes(w))){
+      wakeTriggered = true;
       speakText('네, 말씀하세요');
-      setTimeout(()=>{ toggleVoiceInput(); }, 800);
+      try{wakeRecognition.abort();}catch(e){}
+      wakeRecognition = null;
+      setTimeout(()=>{
+        toggleVoiceInput();
+        // 음성 입력 후 대기 모드 재시작
+        setTimeout(()=>{ wakeTriggered=false; if(wakeMode) startWakeListening(); }, 4000);
+      }, 700);
     }
   };
-  wakeRecognition.onend=()=>{ if(wakeMode) setTimeout(startWakeListening, 300); };
-  wakeRecognition.onerror=()=>{ if(wakeMode) setTimeout(startWakeListening, 1000); };
-  try{ wakeRecognition.start(); }catch(e){}
+  wakeRecognition.onend=()=>{
+    if(wakeMode && !wakeTriggered) setTimeout(startWakeListening, 200);
+  };
+  wakeRecognition.onerror=(e)=>{
+    if(e.error==='no-speech'||e.error==='audio-capture') {
+      if(wakeMode && !wakeTriggered) setTimeout(startWakeListening, 500);
+    }
+  };
+  try{ wakeRecognition.start(); }catch(e){
+    setTimeout(startWakeListening, 1000);
+  }
 }
 
 // ── 음성 출력 (TTS) ──────────────────────────────────────────
@@ -1923,6 +2045,7 @@ initCompChart();
 initTopChart();
 initTypeChart();
 renderTable();
+renderAYearTable();
 renderPerfChart();
 renderContract();
 initDdayChart();
