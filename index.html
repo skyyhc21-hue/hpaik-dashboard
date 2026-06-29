@@ -1931,6 +1931,12 @@ renderFeeTable();
 renderInterviews();
 renderPipeline();
 syncFromGist();
+// 마이크 권한 미리 요청 (처음 한 번만 허용하면 이후 자동)
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(s=>{s.getTracks().forEach(t=>t.stop());})
+    .catch(()=>{});
+}
 </script>
 </body>
 </html>
